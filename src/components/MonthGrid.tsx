@@ -1,0 +1,163 @@
+import { useMemo } from 'preact/hooks';
+import { useCalendar } from './CalendarContext';
+
+// CSS is imported via shadow DOM styles or storybook
+// import './MonthGrid.css';
+
+// Get localized day abbreviations starting from Sunday
+function getDayAbbreviations(): string[] {
+  const formatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+  // Jan 4, 2026 is a Sunday
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(2026, 0, 4 + i);
+    return formatter.format(date);
+  });
+}
+
+// Get localized month name
+function getMonthName(date: Date): string {
+  return new Intl.DateTimeFormat(undefined, { month: 'long' }).format(date);
+}
+
+interface DayCell {
+  date: Date;
+  isCurrentMonth: boolean;
+}
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 1).getDay();
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export function MonthGrid() {
+  const {
+    currentMonth,
+    selectedDay,
+    today,
+    nextMonth,
+    prevMonth,
+    goToToday,
+    selectDay,
+    getColorsForDay,
+  } = useCalendar();
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  // Get localized day abbreviations (memoized)
+  const dayAbbreviations = useMemo(() => getDayAbbreviations(), []);
+  const monthName = useMemo(() => getMonthName(currentMonth), [currentMonth]);
+
+  // Build grid of day cells (6 weeks × 7 days)
+  const cells = useMemo<DayCell[]>(() => {
+    const result: DayCell[] = [];
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    const daysInPrevMonth = getDaysInMonth(year, month - 1);
+
+    // Previous month's trailing days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      result.push({
+        date: new Date(year, month - 1, daysInPrevMonth - i),
+        isCurrentMonth: false,
+      });
+    }
+
+    // Current month's days
+    for (let day = 1; day <= daysInMonth; day++) {
+      result.push({
+        date: new Date(year, month, day),
+        isCurrentMonth: true,
+      });
+    }
+
+    // Next month's leading days (fill to 42 cells = 6 weeks)
+    const remaining = 42 - result.length;
+    for (let day = 1; day <= remaining; day++) {
+      result.push({
+        date: new Date(year, month + 1, day),
+        isCurrentMonth: false,
+      });
+    }
+
+    return result;
+  }, [year, month]);
+
+  return (
+    <div class="month-grid">
+      <div class="month-header">
+        <button class="month-nav" onClick={prevMonth} aria-label="Previous month">
+          ‹
+        </button>
+        <div class="month-title-group">
+          <span class="month-title">
+            {monthName} {year}
+          </span>
+          <button class="today-btn" onClick={goToToday} aria-label="Go to today">
+            Today
+          </button>
+        </div>
+        <button class="month-nav" onClick={nextMonth} aria-label="Next month">
+          ›
+        </button>
+      </div>
+
+      <div class="weekday-header">
+        {dayAbbreviations.map((day, i) => (
+          <div key={i} class="weekday">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div class="days-grid">
+        {cells.map((cell, index) => {
+          const isSelected = isSameDay(cell.date, selectedDay);
+          const isToday = isSameDay(cell.date, today);
+          const colors = getColorsForDay(cell.date);
+
+          const classNames = [
+            'day-cell',
+            cell.isCurrentMonth ? '' : 'other-month',
+            isSelected ? 'selected' : '',
+            isToday ? 'today' : '',
+          ].filter(Boolean).join(' ');
+
+          return (
+            <button
+              key={index}
+              class={classNames}
+              onClick={() => selectDay(cell.date)}
+              aria-label={cell.date.toDateString()}
+              aria-pressed={isSelected}
+            >
+              <span class="day-number">{cell.date.getDate()}</span>
+              {colors.length > 0 && (
+                <div class="event-dots">
+                  {colors.slice(0, 4).map((color, i) => (
+                    <span
+                      key={i}
+                      class="event-dot"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
