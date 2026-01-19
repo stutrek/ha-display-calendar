@@ -20,7 +20,7 @@ A Home Assistant custom card designed for wall-mounted displays. Shows a month v
 1. Open HACS in your Home Assistant instance
 2. Click the three dots menu in the top right corner
 3. Select **Custom repositories**
-4. Add this repository URL: `https://github.com/stutrek/ha-dislpay-calendar`
+4. Add this repository URL: `https://github.com/stutrek/ha-display-calendar`
 5. Select **Dashboard** as the category
 6. Click **Add**
 7. Search for "Display Calendar" and install it
@@ -28,7 +28,7 @@ A Home Assistant custom card designed for wall-mounted displays. Shows a month v
 
 ### Manual Installation
 
-1. Download `display-calendar.js` from the [latest release](https://github.com/stutrek/ha-dislpay-calendar/releases)
+1. Download `display-calendar.js` from the [latest release](https://github.com/stutrek/ha-display-calendar/releases)
 2. Copy it to your `config/www/` folder
 3. Add the resource in Home Assistant:
    - Go to **Settings** → **Dashboards** → **Resources**
@@ -108,7 +108,7 @@ views:
 ### Setup
 
 ```bash
-git clone https://github.com/stutrek/ha-dislpay-calendar
+git clone https://github.com/stutrek/ha-display-calendar
 cd display-calendar
 npm install
 ```
