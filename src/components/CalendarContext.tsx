@@ -41,17 +41,19 @@ export interface NormalizedCalendarConfigItem {
   name?: string;
 }
 
+export type FontSize = 'small' | 'medium' | 'large';
+
 export interface CalendarConfig {
   calendars: CalendarConfigItem[];
   weatherEntity?: `weather.${string}`;
-  fontSize?: string; // e.g., "14px", "1rem"
+  fontSize?: FontSize;
 }
 
 /** Config with colors guaranteed (after normalization) */
 export interface NormalizedCalendarConfig {
   calendars: NormalizedCalendarConfigItem[];
   weatherEntity?: `weather.${string}`;
-  fontSize?: string;
+  fontSize?: FontSize;
 }
 
 /**

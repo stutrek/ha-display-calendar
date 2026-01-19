@@ -1,6 +1,6 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { DEFAULT_COLORS, type CalendarConfig, type CalendarConfigItem } from './CalendarContext';
+import { DEFAULT_COLORS, type CalendarConfig, type CalendarConfigItem, type FontSize } from './CalendarContext';
 import type { HomeAssistant } from '../HAContext';
 import { useCallbackStable } from '../useCallbackStable';
 
@@ -23,7 +23,7 @@ interface EditorProps {
 function CalendarEditorContent({ hass, config, onConfigChanged }: EditorProps) {
   const [calendars, setCalendars] = useState<CalendarConfigItem[]>(config.calendars ?? []);
   const [weatherEntity, setWeatherEntity] = useState<string>(config.weatherEntity ?? '');
-  const [fontSize, setFontSize] = useState<string>(config.fontSize ?? '');
+  const [fontSize, setFontSize] = useState<FontSize>(config.fontSize ?? 'small');
 
   // Get available entities from hass
   const calendarEntities = Object.keys(hass.states).filter(e => e.startsWith('calendar.'));
@@ -33,13 +33,13 @@ function CalendarEditorContent({ hass, config, onConfigChanged }: EditorProps) {
   useEffect(() => {
     setCalendars(config.calendars ?? []);
     setWeatherEntity(config.weatherEntity ?? '');
-    setFontSize(config.fontSize ?? '');
+    setFontSize(config.fontSize ?? 'small');
   }, [config]);
 
   const fireConfigChanged = useCallbackStable((
     newCalendars: CalendarConfigItem[], 
     newWeather: string,
-    newFontSize: string
+    newFontSize: FontSize
   ) => {
     // Only include calendars with valid entity IDs in the saved config
     const validCalendars = newCalendars.filter(cal => cal.entityId && cal.entityId.startsWith('calendar.'));
@@ -49,7 +49,7 @@ function CalendarEditorContent({ hass, config, onConfigChanged }: EditorProps) {
       ...(newWeather && newWeather.startsWith('weather.') 
         ? { weatherEntity: newWeather as `weather.${string}` } 
         : { weatherEntity: undefined }),
-      ...(newFontSize ? { fontSize: newFontSize } : { fontSize: undefined }),
+      fontSize: newFontSize,
     };
     onConfigChanged(newConfig);
   });
@@ -93,9 +93,14 @@ function CalendarEditorContent({ hass, config, onConfigChanged }: EditorProps) {
     fireConfigChanged(calendars, entityId, fontSize);
   });
 
-  const updateFontSize = useCallbackStable((newFontSize: string) => {
+  const updateFontSize = useCallbackStable((newFontSize: FontSize) => {
     setFontSize(newFontSize);
     fireConfigChanged(calendars, weatherEntity, newFontSize);
+  });
+
+  const handleFontSizeSelect = useCallbackStable((e: Event) => {
+    const target = e.target as HTMLSelectElement;
+    updateFontSize(target.value as FontSize);
   });
 
   const handleCalendarSelect = useCallbackStable((index: number, e: Event) => {
@@ -177,17 +182,19 @@ function CalendarEditorContent({ hass, config, onConfigChanged }: EditorProps) {
         <div class="section-header">
           <span>Appearance</span>
         </div>
-        <div class="input-row">
-          <label for="font-size">Font Size</label>
-          <input
-            id="font-size"
-            type="text"
-            class="text-input"
-            placeholder="e.g., 14px, 1rem"
-            value={fontSize}
-            onChange={(e) => updateFontSize((e.target as HTMLInputElement).value)}
-          />
-        </div>
+        <ha-select
+          label="Font Size"
+          value={fontSize}
+          naturalMenuWidth
+          fixedMenuPosition
+          onChange={handleFontSizeSelect}
+          // @ts-expect-error - HA event
+          onclosed={(e: Event) => e.stopPropagation()}
+        >
+          <ha-list-item value="small">Small</ha-list-item>
+          <ha-list-item value="medium">Medium</ha-list-item>
+          <ha-list-item value="large">Large</ha-list-item>
+        </ha-select>
       </div>
     </div>
   );

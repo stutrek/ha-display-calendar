@@ -11,26 +11,27 @@ export const monthGridStyles = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 .month-title-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.25em;
 }
 
 .month-title {
-  font-size: 1.25rem;
+  font-size: 1.25em;
   font-weight: 600;
   color: var(--primary-text-color, #fff);
 }
 
 .today-btn {
-  font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
+  font: inherit;
+  font-size: 0.6875em;
+  padding: 0.125em 0.5em;
   background: none;
   border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.3));
   border-radius: 4px;
@@ -50,11 +51,12 @@ export const monthGridStyles = css`
 }
 
 .month-nav {
+  font: inherit;
+  font-size: 1.5em;
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25em 0.75em;
   color: var(--primary-text-color, #fff);
   border-radius: 4px;
   transition: background-color 0.15s;
@@ -74,14 +76,14 @@ export const monthGridStyles = css`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.25em;
 }
 
 .weekday {
-  font-size: 0.75rem;
+  font-size: 0.75em;
   font-weight: 500;
   color: var(--secondary-text-color, #aaa);
-  padding: 0.25rem;
+  padding: 0.25em;
 }
 
 /* Days grid */
@@ -98,8 +100,9 @@ export const monthGridStyles = css`
   justify-content: center;
   background: none;
   border: none;
+  font: inherit;
   line-height: 2;
-  height: 1.75rem;
+  height: 1.75em;
   cursor: pointer;
   border-radius: 4px;
   color: var(--primary-text-color, #fff);
@@ -124,8 +127,8 @@ export const monthGridStyles = css`
   background-color: var(--primary-color, #03a9f4);
   color: var(--text-primary-color, #fff);
   border-radius: 50%;
-  padding: 0.5rem;
-  margin: -0.5rem;
+  padding: 0.5em;
+  margin: -0.5em;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,7 +144,7 @@ export const monthGridStyles = css`
 }
 
 .day-number {
-  font-size: 0.875rem;
+  font-size: 0.875em;
   font-weight: 500;
   line-height: 1;
 }
@@ -149,15 +152,15 @@ export const monthGridStyles = css`
 /* Event dots */
 .event-dots {
   display: flex;
-  gap: 2px;
-  margin-top: 2px;
+  gap: 0.125em;
+  margin-top: 0.125em;
   position: absolute;
-  bottom: 2px;
+  bottom: 0.125em;
 }
 
 .event-dot {
-  width: 5px;
-  height: 5px;
+  width: 0.25em;
+  height: 0.25em;
   border-radius: 50%;
 }
 `;

@@ -8,8 +8,20 @@ export const cardStyles = css`
 .calendar-card {
   background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
   border-radius: var(--ha-card-border-radius, 12px);
-  padding: 1rem;
+  padding: 1em;
   color: var(--primary-text-color, #fff);
+}
+
+.calendar-card.size-small {
+  font-size: 14px;
+}
+
+.calendar-card.size-medium {
+  font-size: 17.5px;
+}
+
+.calendar-card.size-large {
+  font-size: 21px;
 }
 
 .calendar-divider {

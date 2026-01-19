@@ -3,22 +3,22 @@ import { css } from './styleRegistry';
 export const eventListStyles = css`
 .event-list {
   font-family: system-ui, -apple-system, sans-serif;
-  padding: 0.25rem;
+  padding: 0.25em;
 }
 
 .event-list-empty {
   color: var(--secondary-text-color, #888);
   text-align: center;
-  padding: 1rem;
-  font-size: 0.875rem;
+  padding: 1em;
+  font-size: 0.875em;
 }
 
 .event-item {
   display: flex;
   align-items: stretch;
-  gap: 0.25rem;
-  padding: 0.125rem 0;
-  min-height: 1.5rem;
+  gap: 0.25em;
+  padding: 0.125em 0;
+  min-height: 1.5em;
 }
 
 /* Color bars on left edge - full height of event */
@@ -44,18 +44,18 @@ export const eventListStyles = css`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.125rem;
+  gap: 0.125em;
 }
 
 .event-time {
-  font-size: 0.75rem;
+  font-size: 0.75em;
   font-weight: 600;
   color: var(--secondary-text-color, #aaa);
   font-variant-numeric: tabular-nums;
 }
 
 .event-summary {
-  font-size: 0.875rem;
+  font-size: 0.875em;
   color: var(--primary-text-color, #fff);
   white-space: nowrap;
   overflow: hidden;
@@ -67,17 +67,17 @@ export const eventListStyles = css`
   display: flex;
   align-items: center;
   align-self: center;
-  gap: 0.25rem;
+  gap: 0.25em;
   flex-shrink: 0;
   color: var(--secondary-text-color, #aaa);
 }
 
 .weather-icon {
-  font-size: 1rem;
+  font-size: 1em;
 }
 
 .weather-temp {
-  font-size: 0.75rem;
+  font-size: 0.75em;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -86,6 +86,6 @@ export const eventListStyles = css`
 .event-divider {
   height: 1px;
   background-color: var(--divider-color, rgba(255, 255, 255, 0.2));
-  margin: 0.5rem 0;
+  margin: 0.5em 0;
 }
 `;

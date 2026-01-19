@@ -43,10 +43,11 @@ function CalendarCardInner() {
 }
 
 function CalendarCardContent({ config, hass }: CalendarCardContentProps) {
+  const sizeClass = `size-${config.fontSize || 'small'}`;
   return (
     <>
       <style>{getAllStyles()}</style>
-      <div class="calendar-card" style={config.fontSize ? { fontSize: config.fontSize } : undefined}>
+      <div class={`calendar-card ${sizeClass}`}>
         <HAProvider hass={hass}>
           <CalendarProvider config={config}>
             <CalendarCardInner />
@@ -98,10 +99,11 @@ class DisplayCalendarCard extends HTMLElement {
 
     // Show message if no calendars configured
     if (this._config.calendars.length === 0) {
+      const sizeClass = `size-${this._config.fontSize || 'small'}`;
       render(
         <>
           <style>{getAllStyles()}</style>
-          <div class="calendar-card" style={this._config.fontSize ? { fontSize: this._config.fontSize } : undefined}>
+          <div class={`calendar-card ${sizeClass}`}>
             <div class="calendar-loading">Add a calendar to get started</div>
           </div>
         </>,
