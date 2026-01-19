@@ -1,3 +1,6 @@
+import { css } from './styleRegistry';
+
+export const monthGridStyles = css`
 .month-grid {
   font-family: system-ui, -apple-system, sans-serif;
   width: 100%;
@@ -157,3 +160,4 @@
   height: 5px;
   border-radius: 50%;
 }
+`;

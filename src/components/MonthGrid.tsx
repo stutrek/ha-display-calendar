@@ -1,8 +1,6 @@
 import { useMemo } from 'preact/hooks';
 import { useCalendar } from './CalendarContext';
-
-// CSS is imported via shadow DOM styles or storybook
-// import './MonthGrid.css';
+import './MonthGrid.styles'; // registers styles
 
 // Get localized day abbreviations starting from Sunday
 function getDayAbbreviations(): string[] {

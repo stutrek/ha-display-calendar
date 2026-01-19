@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { CalendarProvider, type CalendarConfig, type CalendarEventWithSource, type WeatherForecast } from '../components/CalendarContext';
 import { MonthGrid } from '../components/MonthGrid';
 import { EventList } from '../components/EventList';
-import { allStyles } from '../components/styles';
+import { getAllStyles } from '../components/styleRegistry';
+// Import component styles to register them
+import '../components/DisplayCalendarCard.styles';
 
 // Import sample data
 import rawCalendarEvents from './calendar.json';
@@ -46,7 +48,7 @@ function CalendarWidget({
       hourlyForecast={hourlyForecast}
       initialDate={initialDate}
     >
-      <style>{allStyles}</style>
+      <style>{getAllStyles()}</style>
       <div style={{ 
         width: '300px', 
         background: '#1c1c1c', 

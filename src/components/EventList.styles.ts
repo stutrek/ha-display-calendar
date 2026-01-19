@@ -1,3 +1,6 @@
+import { css } from './styleRegistry';
+
+export const eventListStyles = css`
 .event-list {
   font-family: system-ui, -apple-system, sans-serif;
   padding: 0.5rem;
@@ -12,27 +15,30 @@
 
 .event-item {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.5rem;
   padding: 0.5rem 0;
+  min-height: 2.5rem;
 }
 
 .event-item + .event-item {
   border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
 }
 
-/* Color bars on left edge */
+/* Color bars on left edge - full height of event */
 .event-colors {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   flex-shrink: 0;
+  width: 4px;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .event-color-bar {
-  width: 4px;
-  height: 1rem;
-  border-radius: 2px;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
 }
 
 /* Event content */
@@ -41,6 +47,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.125rem;
 }
 
@@ -63,6 +70,7 @@
 .event-weather {
   display: flex;
   align-items: center;
+  align-self: center;
   gap: 0.25rem;
   flex-shrink: 0;
   color: var(--secondary-text-color, #aaa);
@@ -84,3 +92,4 @@
   background-color: var(--divider-color, rgba(255, 255, 255, 0.2));
   margin: 0.5rem 0;
 }
+`;

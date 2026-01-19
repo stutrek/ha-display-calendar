@@ -1,7 +1,5 @@
 import { useCalendar, formatTimeRange, type EnrichedEvent } from './CalendarContext';
-
-// CSS is imported via shadow DOM styles or storybook
-// import './EventList.css';
+import './EventList.styles'; // registers styles
 
 // Weather condition to MDI icon mapping
 const WEATHER_ICONS: Record<string, string> = {

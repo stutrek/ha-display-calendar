@@ -3,7 +3,8 @@ import { HAProvider, type HomeAssistant } from '../HAContext';
 import { CalendarProvider, useCalendar, type CalendarConfig } from './CalendarContext';
 import { MonthGrid } from './MonthGrid';
 import { EventList } from './EventList';
-import { allStyles } from './styles';
+import { getAllStyles } from './styleRegistry';
+import './DisplayCalendarCard.styles'; // registers card styles
 // Import editor to ensure it's registered
 import './DisplayCalendarEditor';
 
@@ -44,7 +45,7 @@ function CalendarCardInner() {
 function CalendarCardContent({ config, hass }: CalendarCardContentProps) {
   return (
     <>
-      <style>{allStyles}</style>
+      <style>{getAllStyles()}</style>
       <div class="calendar-card">
         <HAProvider hass={hass}>
           <CalendarProvider config={config}>
@@ -99,7 +100,7 @@ class DisplayCalendarCard extends HTMLElement {
     if (this._config.calendars.length === 0) {
       render(
         <>
-          <style>{allStyles}</style>
+          <style>{getAllStyles()}</style>
           <div class="calendar-card">
             <div class="calendar-loading">Add a calendar to get started</div>
           </div>
