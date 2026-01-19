@@ -402,11 +402,29 @@ export function CalendarProvider({
   });
   
   const nextMonth = useCallbackStable(() => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+      // If navigating to today's month, select today; otherwise select the 1st
+      if (newMonth.getMonth() === today.getMonth() && newMonth.getFullYear() === today.getFullYear()) {
+        setSelectedDay(today);
+      } else {
+        setSelectedDay(newMonth);
+      }
+      return newMonth;
+    });
   });
   
   const prevMonth = useCallbackStable(() => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+      // If navigating to today's month, select today; otherwise select the 1st
+      if (newMonth.getMonth() === today.getMonth() && newMonth.getFullYear() === today.getFullYear()) {
+        setSelectedDay(today);
+      } else {
+        setSelectedDay(newMonth);
+      }
+      return newMonth;
+    });
   });
   
   const selectDay = useCallbackStable((date: Date) => {
