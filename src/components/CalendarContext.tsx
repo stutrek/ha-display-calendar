@@ -134,8 +134,8 @@ function getDedupeKey(event: CalendarEventWithSource): string {
   const uid = event.uid ?? '';
   const startTime = event.start;
   const endTime = event.end;
-  const desc = event.description ?? '';
-  return `${uid}|||${startTime}|||${endTime}|||${desc}`;
+  const summary = event.summary ?? '';
+  return `${uid}|||${startTime}|||${endTime}|||${summary}`;
 }
 
 /**
