@@ -29,7 +29,7 @@ css`
 
 /* the calendar is way too dark in dark mode, so we need to brighten it up */
 .leaflet-map-container.dark .leaflet-tile-pane {
-  filter: brightness(2.75);
+  filter: brightness(4.5);
 }
 
 /* Custom home marker styling */
