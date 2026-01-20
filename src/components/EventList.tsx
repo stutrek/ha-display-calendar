@@ -1,4 +1,7 @@
+import { useState } from 'preact/hooks';
+import { useCallbackStable } from '../useCallbackStable';
 import { useCalendar, formatTimeRange, type EnrichedEvent } from './CalendarContext';
+import { EventModal } from './EventModal';
 import './EventList.styles'; // registers styles
 
 // Weather condition to MDI icon mapping
@@ -32,11 +35,16 @@ function WeatherDisplay({ condition, temperature }: { condition: string; tempera
   );
 }
 
-function EventItem({ event }: { event: EnrichedEvent }) {
+interface EventItemProps {
+  event: EnrichedEvent;
+  onClick: () => void;
+}
+
+function EventItem({ event, onClick }: EventItemProps) {
   const timeRange = event.isAllDay ? null : formatTimeRange(event.start, event.end);
   
   return (
-    <div class="event-item">
+    <button class="event-item" onClick={onClick} type="button">
       <div class="event-colors">
         {event.colors.map((color, i) => (
           <span
@@ -56,12 +64,13 @@ function EventItem({ event }: { event: EnrichedEvent }) {
           temperature={event.weather.temperature}
         />
       )}
-    </div>
+    </button>
   );
 }
 
 export function EventList() {
   const { eventsForSelectedDay, selectedDay } = useCalendar();
+  const [selectedEvent, setSelectedEvent] = useState<EnrichedEvent | null>(null);
   
   // Separate timed and all-day events (already sorted by context)
   const timedEvents = eventsForSelectedDay.filter(e => !e.isAllDay);
@@ -69,6 +78,10 @@ export function EventList() {
   
   const hasTimedEvents = timedEvents.length > 0;
   const hasAllDayEvents = allDayEvents.length > 0;
+  
+  const handleCloseModal = useCallbackStable(() => {
+    setSelectedEvent(null);
+  });
   
   if (eventsForSelectedDay.length === 0) {
     return (
@@ -88,7 +101,11 @@ export function EventList() {
     <div class="event-list">
       {/* Timed events */}
       {timedEvents.map((event, i) => (
-        <EventItem key={`timed-${i}`} event={event} />
+        <EventItem
+          key={`timed-${i}`}
+          event={event}
+          onClick={() => setSelectedEvent(event)}
+        />
       ))}
       
       {/* Divider between timed and all-day */}
@@ -98,8 +115,17 @@ export function EventList() {
       
       {/* All-day events */}
       {allDayEvents.map((event, i) => (
-        <EventItem key={`allday-${i}`} event={event} />
+        <EventItem
+          key={`allday-${i}`}
+          event={event}
+          onClick={() => setSelectedEvent(event)}
+        />
       ))}
+      
+      {/* Event detail modal */}
+      {selectedEvent && (
+        <EventModal event={selectedEvent} onClose={handleCloseModal} />
+      )}
     </div>
   );
 }

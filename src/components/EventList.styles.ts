@@ -13,12 +13,35 @@ export const eventListStyles = css`
   font-size: 0.875em;
 }
 
+/* Event item - styled as a button for accessibility */
 .event-item {
+  font-size: inherit;
   display: flex;
   align-items: stretch;
   gap: 0.25em;
-  padding: 0.125em 0;
+  padding: 0.25em 0.5em 0.25em 0;
   min-height: 1.5em;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.15s;
+}
+
+.event-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.event-item:focus {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: -2px;
+}
+
+.event-item:active {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* Color bars on left edge - full height of event */
