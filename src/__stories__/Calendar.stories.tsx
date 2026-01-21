@@ -55,7 +55,7 @@ function CalendarWidget({
       <div 
         class={`calendar-card size-${fontSize}`}
         style={{ 
-          width: '300px', 
+          width: '400px', 
           background: '#1c1c1c', 
           borderRadius: '12px',
           padding: '1em',

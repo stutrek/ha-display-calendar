@@ -14,7 +14,11 @@ function getDayAbbreviations(): string[] {
 
 // Get localized month name (long or short)
 function getMonthName(date: Date, short = false): string {
-  return new Intl.DateTimeFormat(undefined, { month: short ? 'short' : 'long' }).format(date);
+  return new Intl.DateTimeFormat(undefined, { 
+    day: "numeric",
+    year: "numeric",
+    month: short ? 'short' : 'long'
+  }).format(date);
 }
 
 interface DayCell {
@@ -62,8 +66,8 @@ export function MonthGrid() {
   const dayAbbreviations = useMemo(() => getDayAbbreviations(), []);
   // Use short month name when showing Today button, full name otherwise
   const monthName = useMemo(
-    () => getMonthName(currentMonth, !isViewingToday), 
-    [currentMonth, isViewingToday]
+    () => getMonthName(selectedDay, !isViewingToday), 
+    [selectedDay, isViewingToday]
   );
 
   // Build grid of day cells (6 weeks × 7 days)
@@ -108,7 +112,7 @@ export function MonthGrid() {
           ‹
         </button>
         <span class="month-title">
-          {monthName} {year}
+          {monthName}
         </span>
         {!isViewingToday && (
           <button class="today-btn" onClick={goToToday} aria-label="Go to today">

@@ -17,7 +17,6 @@ export const monthGridStyles = css`
 
 .month-title {
   font-size: 1.25em;
-  font-weight: 600;
   color: var(--primary-text-color, #fff);
 }
 
@@ -86,6 +85,7 @@ export const monthGridStyles = css`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0;
+  margin-bottom: 1em;
 }
 
 .day-cell {
@@ -122,11 +122,12 @@ export const monthGridStyles = css`
   background-color: var(--primary-color, #03a9f4);
   color: var(--text-primary-color, #fff);
   border-radius: 50%;
-  padding: 0.5em;
-  margin: -0.5em;
+  padding: 0.3em;
+  margin: -0.3em;
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1/1;
 }
 
 .day-cell.selected {

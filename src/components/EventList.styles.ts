@@ -3,7 +3,7 @@ import { css } from './styleRegistry';
 export const eventListStyles = css`
 .event-list {
   font-family: system-ui, -apple-system, sans-serif;
-  padding: 0.25em;
+  padding: 0.25em 0.25em 0 0.25em;
 }
 
 .event-list-empty {
