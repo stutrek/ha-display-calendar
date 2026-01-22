@@ -1,25 +1,19 @@
 // ============================================================================
 // Daily Weather Chart
-// A visual representation of daily weather forecast with temperature bars
+// A visual representation of daily weather forecast with rich visual elements
 // ============================================================================
 
 import type { JSX } from 'preact';
 import type { WeatherForecast, SunTimes } from './WeatherContext';
 import {
   getTemperatureColor,
-  getGroundType,
-  getPrecipitationSize,
-  getPrecipitationOpacity,
-  getPrecipitationType,
-  getCloudCoverage,
   getPrecipitationAmount,
   getPrecipitationProbability,
+  getPrecipitationType,
+  getPrecipitationSize,
+  getPrecipitationOpacity,
 } from './weatherUtils';
-import {
-  CloudShape,
-  Raindrop,
-  Snowflake,
-} from './WeatherSvgElements';
+import { Raindrop, Snowflake } from './WeatherSvgElements';
 
 // ============================================================================
 // Types
@@ -31,6 +25,26 @@ interface DailyChartProps {
   latitude: number | undefined;
   maxItems?: number;
 }
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+// Condition icons
+const CONDITION_ICONS: Record<string, string> = {
+  sunny: '☀️',
+  'clear-night': '🌙',
+  cloudy: '☁️',
+  partlycloudy: '⛅',
+  rainy: '🌧️',
+  pouring: '🌧️',
+  snowy: '❄️',
+  'snowy-rainy': '🌨️',
+  fog: '🌫️',
+  lightning: '⚡',
+  'lightning-rainy': '⛈️',
+  windy: '💨',
+};
 
 // ============================================================================
 // Helper Functions
@@ -52,106 +66,16 @@ function formatDay(dateStr: string): string {
   return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
 }
 
-// Weather condition icons (simplified mapping)
-const CONDITION_ICONS: Record<string, string> = {
-  sunny: '☀️',
-  'clear-night': '🌙',
-  cloudy: '☁️',
-  partlycloudy: '⛅',
-  rainy: '🌧️',
-  pouring: '🌧️',
-  snowy: '❄️',
-  'snowy-rainy': '🌨️',
-  fog: '🌫️',
-  lightning: '⚡',
-  'lightning-rainy': '⛈️',
-  windy: '💨',
-};
-
 function getConditionIcon(condition: string | undefined): string {
   if (!condition) return '☁️';
   return CONDITION_ICONS[condition] ?? '☁️';
 }
 
 // ============================================================================
-// Temperature Bar Component
+// Precipitation Component
 // ============================================================================
 
-interface TempBarProps {
-  high: number;
-  low: number;
-  minTemp: number;
-  maxTemp: number;
-  x: number;
-  barWidth: number;
-  chartHeight: number;
-}
-
-function TempBar({ high, low, minTemp, maxTemp, x, barWidth, chartHeight }: TempBarProps) {
-  const range = maxTemp - minTemp || 1;
-  
-  // Calculate bar positions (inverted because SVG y increases downward)
-  const highY = ((maxTemp - high) / range) * chartHeight;
-  const lowY = ((maxTemp - low) / range) * chartHeight;
-  const barHeight = lowY - highY;
-  
-  // Get colors for high and low
-  const highColor = getTemperatureColor(high);
-  const lowColor = getTemperatureColor(low);
-  
-  // Gradient ID
-  const gradientId = `temp-bar-gradient-${x}`;
-  
-  return (
-    <g>
-      <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={highColor} />
-          <stop offset="100%" stopColor={lowColor} />
-        </linearGradient>
-      </defs>
-      
-      {/* Temperature bar */}
-      <rect
-        x={x - barWidth / 2}
-        y={highY}
-        width={barWidth}
-        height={Math.max(barHeight, 2)}
-        rx={barWidth / 2}
-        ry={barWidth / 2}
-        fill={`url(#${gradientId})`}
-        opacity={0.8}
-      />
-      
-      {/* High temp marker */}
-      <circle
-        cx={x}
-        cy={highY}
-        r={4}
-        fill={highColor}
-        stroke="white"
-        strokeWidth={1}
-      />
-      
-      {/* Low temp marker */}
-      <circle
-        cx={x}
-        cy={lowY}
-        r={3}
-        fill={lowColor}
-        stroke="white"
-        strokeWidth={1}
-        opacity={0.8}
-      />
-    </g>
-  );
-}
-
-// ============================================================================
-// Mini Weather Indicator Component
-// ============================================================================
-
-interface MiniWeatherIndicatorProps {
+interface DailyPrecipitationProps {
   item: WeatherForecast;
   x: number;
   y: number;
@@ -159,59 +83,41 @@ interface MiniWeatherIndicatorProps {
   height: number;
 }
 
-function MiniWeatherIndicator({ item, x, y, width, height }: MiniWeatherIndicatorProps) {
-  const elements: JSX.Element[] = [];
-  
-  // Add small clouds if cloudy
-  const cloudCoverage = getCloudCoverage(item.cloud_coverage);
-  if (cloudCoverage > 30) {
-    const numClouds = Math.ceil((cloudCoverage / 100) * 2);
-    for (let i = 0; i < numClouds; i++) {
-      elements.push(
-        <CloudShape
-          key={`cloud-${i}`}
-          x={x + width * (0.3 + i * 0.4)}
-          y={y + height * 0.2}
-          scale={0.25}
-          opacity={0.4 + (cloudCoverage / 100) * 0.3}
-        />
-      );
-    }
-  }
-  
-  // Add precipitation
+function DailyPrecipitation({ item, x, y, width, height }: DailyPrecipitationProps) {
   const precipType = getPrecipitationType(item.condition);
   const precipAmount = getPrecipitationAmount(item.precipitation);
   const precipProb = getPrecipitationProbability(item.precipitation_probability);
   
-  if (precipType && precipAmount > 0) {
-    const size = Math.min(getPrecipitationSize(precipAmount) * 0.8, 6);
-    const opacity = getPrecipitationOpacity(precipProb);
-    const numDrops = Math.min(Math.ceil(precipAmount * 2), 4);
+  if (!precipType || precipAmount === 0) return null;
+  
+  const size = Math.min(getPrecipitationSize(precipAmount) * 0.7, 5);
+  const opacity = getPrecipitationOpacity(precipProb);
+  const numDrops = Math.min(Math.ceil(precipAmount * 2), 5);
+  
+  const elements: JSX.Element[] = [];
+  
+  for (let i = 0; i < numDrops; i++) {
+    const dropX = x + width * (0.2 + (i * 0.6) / numDrops);
+    const dropY = y + height * (0.3 + (i % 3) * 0.2);
     
-    for (let i = 0; i < numDrops; i++) {
-      const dropX = x + width * (0.2 + i * 0.2);
-      const dropY = y + height * (0.4 + (i % 2) * 0.2);
-      
-      if (precipType === 'snow') {
-        elements.push(
-          <Snowflake key={`snow-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
-        );
-      } else if (precipType === 'rain') {
+    if (precipType === 'snow') {
+      elements.push(
+        <Snowflake key={`snow-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
+      );
+    } else if (precipType === 'rain') {
+      elements.push(
+        <Raindrop key={`rain-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
+      );
+    } else {
+      // Mixed
+      if (i % 2 === 0) {
         elements.push(
           <Raindrop key={`rain-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
         );
       } else {
-        // Mixed
-        if (i % 2 === 0) {
-          elements.push(
-            <Raindrop key={`rain-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
-          );
-        } else {
-          elements.push(
-            <Snowflake key={`snow-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
-          );
-        }
+        elements.push(
+          <Snowflake key={`snow-${i}`} x={dropX} y={dropY} size={size} opacity={opacity} />
+        );
       }
     }
   }
@@ -229,9 +135,7 @@ interface DayColumnProps {
   width: number;
   minTemp: number;
   maxTemp: number;
-  chartTop: number;
-  chartHeight: number;
-  latitude: number | undefined;
+  viewHeight: number;
 }
 
 function DayColumn({
@@ -240,64 +144,53 @@ function DayColumn({
   width,
   minTemp,
   maxTemp,
-  chartTop,
-  chartHeight,
-  latitude,
+  viewHeight,
 }: DayColumnProps) {
   const centerX = x + width / 2;
   const high = item.temperature ?? 50;
   const low = item.templow ?? high - 10;
   
-  // Layout
-  const labelY = 12;
-  const iconY = 26;
-  const indicatorHeight = 20;
-  const indicatorY = chartTop - indicatorHeight - 5;
-  const highTempLabelY = chartTop + chartHeight + 14;
-  const lowTempLabelY = chartTop + chartHeight + 26;
+  // Get temperature colors
+  const highColor = getTemperatureColor(high);
+  const lowColor = getTemperatureColor(low);
   
-  // Determine background tint based on conditions
-  const groundType = getGroundType(
-    high,
-    getPrecipitationAmount(item.precipitation),
-    item.condition,
-    getPrecipitationProbability(item.precipitation_probability),
-    latitude
-  );
+  // Layout zones
+  const padding = 3;
+  const headerHeight = 30;      // Day label + condition icon
+  const precipLayerHeight = 18; // Precipitation elements above bar
+  const tempLabelHeight = 20;   // Space for labels
   
-  let bgColor = 'transparent';
-  let bgOpacity = 0;
+  // Calculate positions
+  const contentTop = headerHeight;
+  const contentHeight = viewHeight - headerHeight - tempLabelHeight - padding * 2;
   
-  if (groundType === 'ice') {
-    bgColor = '#e3f2fd';
-    bgOpacity = 0.15;
-  } else if (groundType === 'sand') {
-    bgColor = '#f4d03f';
-    bgOpacity = 0.1;
-  } else if (groundType === 'puddles') {
-    bgColor = '#4dabf7';
-    bgOpacity = 0.1;
-  }
+  // Temperature bar area (below precip layer)
+  const tempBarTop = contentTop + precipLayerHeight;
+  const tempBarHeight = contentHeight - precipLayerHeight - 5;
+  const tempRange = maxTemp - minTemp || 1;
+  
+  // Calculate bar positions (inverted because SVG y increases downward)
+  const highY = tempBarTop + ((maxTemp - high) / tempRange) * tempBarHeight;
+  const lowY = tempBarTop + ((maxTemp - low) / tempRange) * tempBarHeight;
+  const barHeight = lowY - highY;
+  
+  // ClipPath ID for temperature bar
+  const clipId = `temp-clip-${x}`;
+  
+  // CSS gradient for temperature (vertical: high at top, low at bottom)
+  const tempGradientStyle = {
+    background: `linear-gradient(to bottom, ${highColor}, ${lowColor})`,
+    width: `${width - padding * 2}px`,
+    height: `${Math.max(barHeight, 4)}px`,
+    borderRadius: '4px',
+  };
   
   return (
     <g>
-      {/* Background tint */}
-      {bgOpacity > 0 && (
-        <rect
-          x={x + 2}
-          y={chartTop - indicatorHeight - 10}
-          width={width - 4}
-          height={chartHeight + indicatorHeight + 20}
-          rx={4}
-          fill={bgColor}
-          opacity={bgOpacity}
-        />
-      )}
-      
       {/* Day label */}
       <text
         x={centerX}
-        y={labelY}
+        y={14}
         textAnchor="middle"
         fill="var(--secondary-text-color, #aaa)"
         fontSize="0.4em"
@@ -309,53 +202,67 @@ function DayColumn({
       {/* Condition icon */}
       <text
         x={centerX}
-        y={iconY}
+        y={27}
         textAnchor="middle"
-        fontSize="0.7em"
+        fontSize="0.65em"
       >
         {getConditionIcon(item.condition)}
       </text>
       
-      {/* Mini weather indicator */}
-      <MiniWeatherIndicator
+      {/* Precipitation - above the temperature bar */}
+      <DailyPrecipitation
         item={item}
-        x={x}
-        y={indicatorY}
-        width={width}
-        height={indicatorHeight}
+        x={x + padding}
+        y={contentTop}
+        width={width - padding * 2}
+        height={precipLayerHeight}
       />
       
-      {/* Temperature bar */}
-      <TempBar
-        high={high}
-        low={low}
-        minTemp={minTemp}
-        maxTemp={maxTemp}
-        x={centerX}
-        barWidth={8}
-        chartHeight={chartHeight}
-      />
+      {/* Temperature bar clip path */}
+      <defs>
+        <clipPath id={clipId}>
+          <rect
+            x={x + padding}
+            y={highY}
+            width={width - padding * 2}
+            height={Math.max(barHeight, 4)}
+            rx={4}
+          />
+        </clipPath>
+      </defs>
       
-      {/* High temp label */}
+      {/* Temperature bar - CSS gradient with clipPath */}
+      <g clip-path={`url(#${clipId})`}>
+        <foreignObject
+          x={x + padding}
+          y={highY}
+          width={width - padding * 2}
+          height={Math.max(barHeight, 4)}
+        >
+          <div style={tempGradientStyle} />
+        </foreignObject>
+      </g>
+      
+      {/* High temp label - at the top of the bar */}
       <text
         x={centerX}
-        y={highTempLabelY}
+        y={highY - 4}
         textAnchor="middle"
         fill="var(--primary-text-color, #fff)"
-        fontSize="0.45em"
-        fontWeight="500"
+        fontSize="0.4em"
+        fontWeight="600"
         fontFamily="system-ui, sans-serif"
       >
         {Math.round(high)}°
       </text>
       
-      {/* Low temp label */}
+      {/* Low temp label - at the bottom of the bar */}
       <text
         x={centerX}
-        y={lowTempLabelY}
+        y={lowY + 12}
         textAnchor="middle"
         fill="var(--secondary-text-color, #aaa)"
-        fontSize="0.4em"
+        fontSize="0.35em"
         fontFamily="system-ui, sans-serif"
       >
         {Math.round(low)}°
@@ -368,7 +275,7 @@ function DayColumn({
 // Main Component
 // ============================================================================
 
-export function DailyChart({ forecast, sunTimes: _sunTimes, latitude, maxItems = 7 }: DailyChartProps) {
+export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude, maxItems = 7 }: DailyChartProps) {
   const items = forecast.slice(0, maxItems);
   
   if (items.length === 0) {
@@ -377,15 +284,15 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude, maxItems =
   
   // Chart dimensions
   const viewWidth = 400;
-  const viewHeight = 140;
-  const padding = { left: 5, right: 5, top: 5, bottom: 5 };
+  const viewHeight = 160;
+  const padding = { left: 5, right: 5 };
   
   const contentWidth = viewWidth - padding.left - padding.right;
   
   // Calculate column width
   const columnWidth = contentWidth / items.length;
   
-  // Calculate min/max temps across all days
+  // Calculate min/max temps across all days for consistent bar scaling
   const allTemps: number[] = [];
   items.forEach(item => {
     if (item.temperature !== undefined) allTemps.push(item.temperature);
@@ -395,29 +302,25 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude, maxItems =
   const minTemp = Math.min(...allTemps) - 5;
   const maxTemp = Math.max(...allTemps) + 5;
   
-  // Chart area positioning
-  const chartTop = 45; // Space for labels and icons
-  const chartHeight = 50;
-  
   return (
     <svg
       viewBox={`0 0 ${viewWidth} ${viewHeight}`}
       class="daily-chart"
-      style={{ width: '100%', height: 'auto', minHeight: '100px' }}
+      style={{ width: '100%', height: 'auto', minHeight: '120px' }}
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Background */}
+      {/* Base background - neutral card color */}
       <rect
         x={0}
         y={0}
         width={viewWidth}
         height={viewHeight}
-        fill="rgba(255, 255, 255, 0.03)"
+        fill="var(--ha-card-background, var(--card-background-color, #1c1c1c))"
         rx={8}
       />
       
       {/* Day columns */}
-      <g transform={`translate(${padding.left}, ${padding.top})`}>
+      <g transform={`translate(${padding.left}, 0)`}>
         {items.map((item, i) => (
           <DayColumn
             key={i}
@@ -426,9 +329,7 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude, maxItems =
             width={columnWidth}
             minTemp={minTemp}
             maxTemp={maxTemp}
-            chartTop={chartTop}
-            chartHeight={chartHeight}
-            latitude={latitude}
+            viewHeight={viewHeight}
           />
         ))}
       </g>
