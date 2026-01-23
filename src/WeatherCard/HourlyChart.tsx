@@ -51,10 +51,6 @@ function formatHour(dateStr: string): string {
   const date = new Date(dateStr);
   const hour = date.getHours();
   const hour12 = hour % 12 || 12;
-  // Only show am/pm at noon and midnight
-  if (hour === 0 || hour === 12) {
-    return `${hour12}${hour < 12 ? 'am' : 'pm'}`;
-  }
   return String(hour12);
 }
 
@@ -110,9 +106,10 @@ interface TemperatureLineProps {
   width: number;
   height: number;
   bottomY: number;
+  sunTimes: SunTimes;
 }
 
-function TemperatureLine({ forecast, x, y, width, height, bottomY }: TemperatureLineProps) {
+function TemperatureLine({ forecast, x, y, width, height, bottomY, sunTimes }: TemperatureLineProps) {
   // Calculate min/max temps for scaling
   const temps = forecast.map(f => f.temperature ?? 50);
   const minTemp = Math.min(...temps);
@@ -132,16 +129,19 @@ function TemperatureLine({ forecast, x, y, width, height, bottomY }: Temperature
   });
   
   // Determine which temp labels to show (when temp changes at all from last label)
-  const tempLabels: Array<{ x: number; y: number; temp: number; show: boolean }> = [];
+  const tempLabels: Array<{ x: number; y: number; temp: number; show: boolean; index: number }> = [];
   let lastShownTemp: number | null = null;
   
-  points.forEach((point) => {
+  points.forEach((point, index) => {
+    if (index === 0 || index === points.length - 1) {
+      return;
+    }
     const roundedTemp = Math.round(point.temp);
     const shouldShow = lastShownTemp === null || roundedTemp !== lastShownTemp;
     if (shouldShow) {
       lastShownTemp = roundedTemp;
     }
-    tempLabels.push({ x: point.x, y: point.y, temp: point.temp, show: shouldShow });
+    tempLabels.push({ x: point.x, y: point.y, temp: point.temp, show: shouldShow, index });
   });
   
   // Create a single fill path: along the line, down to bottom, back across bottom
@@ -204,20 +204,45 @@ function TemperatureLine({ forecast, x, y, width, height, bottomY }: Temperature
       />
       
       {/* Temperature labels (only when temp changes by >1°) */}
-      {tempLabels.map((label, i) => label.show && (
-        <text
-          key={`label-${i}`}
-          x={label.x}
-          y={label.y - 6}
-          textAnchor="middle"
-          fill="var(--primary-text-color, #fff)"
-          fontSize="0.5em"
-          fontWeight="600"
-          fontFamily="system-ui, sans-serif"
-        >
-          {Math.round(label.temp)}°
-        </text>
-      ))}
+      {tempLabels.map((label, i) => {
+        if (!label.show) return null;
+        
+        // Get sky color at this point to determine text contrast
+        const item = forecast[label.index];
+        const datetime = new Date(item.datetime);
+        const cloudCoverage = getCloudCoverage(item.cloud_coverage);
+        const skyColor = getSkyColor(datetime, cloudCoverage, sunTimes);
+        
+        // Calculate brightness of sky color to determine text color
+        // Extract RGB from hex color
+        const hex = skyColor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        
+        // Use dark text on light backgrounds, light text on dark backgrounds
+        const textColor = brightness > 128 ? '#000000' : '#ffffff';
+        
+        return (
+          <text
+            key={`label-${i}`}
+            x={label.x}
+            y={label.y - 6}
+            textAnchor="middle"
+            fill={textColor}
+            strokeWidth={0.5}
+            strokeOpacity={0.8}
+            fontWeight="600"
+            fontFamily="system-ui, sans-serif"
+            style={{
+              fontSize: '0.8em',
+            }}
+          >
+            {Math.round(label.temp)}°
+          </text>
+        );
+      })}
     </>
   );
 }
@@ -370,6 +395,7 @@ function TimeLabels({ forecast, x, y, width, height }: TimeLabelsProps) {
   return (
     <g>
       {forecast.map((item, i) => {
+
         const labelX = x + (i / (forecast.length - 1)) * width;
         const labelY = y + height * 0.7;
         
@@ -380,8 +406,10 @@ function TimeLabels({ forecast, x, y, width, height }: TimeLabelsProps) {
             y={labelY}
             textAnchor="middle"
             fill="var(--secondary-text-color, #aaa)"
-            fontSize="0.45em"
             fontFamily="system-ui, sans-serif"
+            style={{
+              fontSize: '1em',
+            }}
           >
             {formatHour(item.datetime)}
           </text>
@@ -581,7 +609,7 @@ export function HourlyChart({ forecast, sunTimes, latitude, maxItems = 12 }: Hou
     <svg
       viewBox={`0 0 ${viewWidth} ${viewHeight}`}
       class="hourly-chart"
-      style={{ width: '100%', height: 'auto', minHeight: '120px' }}
+      style={{ width: '100%', height: 'auto' }}
       preserveAspectRatio="xMidYMid meet"
     >
       {/* Neutral background for bottom bar (below colored zone) */}
@@ -601,6 +629,15 @@ export function HourlyChart({ forecast, sunTimes, latitude, maxItems = 12 }: Hou
         height={coloredZoneBottom}
       />
       
+      {/* Precipitation - starts halfway into clouds, extends into main area */}
+      <HourlyPrecipitation
+        forecast={items}
+        x={padding.left}
+        y={cloudLayerY + cloudLayerHeight}
+        width={contentWidth}
+        height={cloudLayerHeight * 0.5 + mainAreaHeight * 0.4}
+      />
+      
       {/* Cloud layer - extends slightly above the sky */}
       <HourlyClouds
         forecast={items}
@@ -610,23 +647,17 @@ export function HourlyChart({ forecast, sunTimes, latitude, maxItems = 12 }: Hou
         height={cloudLayerHeight + 10}
       />
       
-      {/* Precipitation - starts halfway into clouds, extends into main area */}
-      <HourlyPrecipitation
-        forecast={items}
-        x={padding.left}
-        y={cloudLayerY + cloudLayerHeight * 0.5}
-        width={contentWidth}
-        height={cloudLayerHeight * 0.5 + mainAreaHeight * 0.4}
-      />
+
       
       {/* Temperature line with colored fill strips */}
       <TemperatureLine
         forecast={items}
-        x={padding.left}
+        x={0}
         y={mainAreaY + mainAreaHeight * 0.05}
-        width={contentWidth}
+        width={viewWidth}
         height={mainAreaHeight * 0.85}
         bottomY={coloredZoneBottom}
+        sunTimes={sunTimes}
       />
       
       {/* Wind arrows - rendered last to be on top of everything */}
@@ -650,8 +681,8 @@ export function HourlyChart({ forecast, sunTimes, latitude, maxItems = 12 }: Hou
       {/* Time labels - in neutral bottom bar */}
       <TimeLabels
         forecast={items}
-        x={padding.left}
-        y={bottomBarY + bottomBarHeight * 0.4}
+        x={0}
+        y={bottomBarY + 5}
         width={contentWidth}
         height={bottomBarHeight * 0.6}
       />

@@ -114,6 +114,14 @@ export const weatherCardStyles = css`
   margin: 0 0.125em;
 }
 
+.weather-divider {
+  border: 0;
+  height: 0;
+  border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+  margin: 0;
+  padding: 0;
+}
+
 /* Wind section */
 .weather-detail-wind {
   display: flex;

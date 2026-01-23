@@ -30,20 +30,24 @@ interface DailyChartProps {
 // Constants
 // ============================================================================
 
-// Condition icons
-const CONDITION_ICONS: Record<string, string> = {
-  sunny: '☀️',
-  'clear-night': '🌙',
-  cloudy: '☁️',
-  partlycloudy: '⛅',
-  rainy: '🌧️',
-  pouring: '🌧️',
-  snowy: '❄️',
-  'snowy-rainy': '🌨️',
-  fog: '🌫️',
-  lightning: '⚡',
-  'lightning-rainy': '⛈️',
-  windy: '💨',
+// Weather icon mapping (MDI icons)
+const WEATHER_ICONS: Record<string, string> = {
+  sunny: 'mdi:weather-sunny',
+  'clear-night': 'mdi:weather-night',
+  cloudy: 'mdi:weather-cloudy',
+  partlycloudy: 'mdi:weather-partly-cloudy',
+  'partlycloudy-night': 'mdi:weather-night-partly-cloudy',
+  rainy: 'mdi:weather-rainy',
+  pouring: 'mdi:weather-pouring',
+  snowy: 'mdi:weather-snowy',
+  'snowy-rainy': 'mdi:weather-snowy-rainy',
+  fog: 'mdi:weather-fog',
+  hail: 'mdi:weather-hail',
+  lightning: 'mdi:weather-lightning',
+  'lightning-rainy': 'mdi:weather-lightning-rainy',
+  windy: 'mdi:weather-windy',
+  'windy-variant': 'mdi:weather-windy-variant',
+  exceptional: 'mdi:alert-circle-outline',
 };
 
 // ============================================================================
@@ -52,23 +56,12 @@ const CONDITION_ICONS: Record<string, string> = {
 
 function formatDay(dateStr: string): string {
   const date = new Date(dateStr);
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  if (date.toDateString() === today.toDateString()) {
-    return 'Today';
-  }
-  if (date.toDateString() === tomorrow.toDateString()) {
-    return 'Tmrw';
-  }
-  
   return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
 }
 
-function getConditionIcon(condition: string | undefined): string {
-  if (!condition) return '☁️';
-  return CONDITION_ICONS[condition] ?? '☁️';
+function getWeatherIcon(condition: string | undefined): string {
+  if (!condition) return 'mdi:weather-cloudy';
+  return WEATHER_ICONS[condition] ?? 'mdi:weather-cloudy';
 }
 
 // ============================================================================
@@ -94,11 +87,16 @@ function DailyPrecipitation({ item, x, y, width, height }: DailyPrecipitationPro
   const opacity = getPrecipitationOpacity(precipProb);
   const numDrops = Math.min(Math.ceil(precipAmount * 2), 5);
   
+  // Format precipitation amount (round to 1 decimal place)
+  const formattedAmount = precipAmount.toFixed(1);
+  
   const elements: JSX.Element[] = [];
+  
+ 
   
   for (let i = 0; i < numDrops; i++) {
     const dropX = x + width * (0.2 + (i * 0.6) / numDrops);
-    const dropY = y + height * (0.3 + (i % 3) * 0.2);
+    const dropY = y - 8 + height * (0.3 + (i % 3) * 0.2);
     
     if (precipType === 'snow') {
       elements.push(
@@ -122,6 +120,32 @@ function DailyPrecipitation({ item, x, y, width, height }: DailyPrecipitationPro
     }
   }
   
+   // Add precipitation amount text above icons
+  elements.push(
+    <foreignObject
+      key="precip-text"
+      x={x + width / 2 - 20}
+      y={y - 8}
+      width={40}
+      height={12}
+    >
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--primary-text-color, #fff)',
+          fontSize: '0.5em',
+          fontFamily: 'system-ui, sans-serif',
+        }}
+      >
+        {formattedAmount} in
+      </div>
+    </foreignObject>
+  );
+
   return <g>{elements}</g>;
 }
 
@@ -136,6 +160,7 @@ interface DayColumnProps {
   minTemp: number;
   maxTemp: number;
   viewHeight: number;
+  index: number;
 }
 
 function DayColumn({
@@ -145,6 +170,7 @@ function DayColumn({
   minTemp,
   maxTemp,
   viewHeight,
+  index,
 }: DayColumnProps) {
   const centerX = x + width / 2;
   const high = item.temperature ?? 50;
@@ -174,8 +200,8 @@ function DayColumn({
   const lowY = tempBarTop + ((maxTemp - low) / tempRange) * tempBarHeight;
   const barHeight = lowY - highY;
   
-  // ClipPath ID for temperature bar
-  const clipId = `temp-clip-${x}`;
+  // ClipPath ID for temperature bar - use index for uniqueness
+  const clipId = `temp-clip-${index}-${item.datetime}`;
   
   // CSS gradient for temperature (vertical: high at top, low at bottom)
   const tempGradientStyle = {
@@ -185,35 +211,56 @@ function DayColumn({
     borderRadius: '4px',
   };
   
+  const iconSize = 24;
+  const iconY = 27;
+  
   return (
     <g>
-      {/* Day label */}
-      <text
-        x={centerX}
-        y={14}
-        textAnchor="middle"
-        fill="var(--secondary-text-color, #aaa)"
-        fontSize="0.4em"
-        fontFamily="system-ui, sans-serif"
+      {/* Day label - using foreignObject with CSS */}
+      <foreignObject
+        x={centerX - 30}
+        y={4}
+        width={60}
+        height={16}
       >
-        {formatDay(item.datetime)}
-      </text>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--secondary-text-color, #aaa)',
+            fontSize: '0.75em',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          {formatDay(item.datetime)}
+        </div>
+      </foreignObject>
       
-      {/* Condition icon */}
-      <text
-        x={centerX}
-        y={27}
-        textAnchor="middle"
-        fontSize="0.65em"
+      {/* Condition icon - using ha-icon */}
+      <foreignObject
+        x={centerX - iconSize / 2}
+        y={iconY - iconSize / 2}
+        width={iconSize}
+        height={iconSize + 5}
       >
-        {getConditionIcon(item.condition)}
-      </text>
+        <ha-icon
+          icon={getWeatherIcon(item.condition)}
+          style={{
+            width: `${iconSize}px`,
+            height: `${iconSize}px`,
+            color: 'var(--primary-text-color, #fff)',
+          }}
+        />
+      </foreignObject>
       
       {/* Precipitation - above the temperature bar */}
       <DailyPrecipitation
         item={item}
         x={x + padding}
-        y={contentTop}
+        y={contentTop + 27}
         width={width - padding * 2}
         height={precipLayerHeight}
       />
@@ -243,30 +290,52 @@ function DayColumn({
         </foreignObject>
       </g>
       
-      {/* High temp label - at the top of the bar */}
-      <text
-        x={centerX}
-        y={highY - 4}
-        textAnchor="middle"
-        fill="var(--primary-text-color, #fff)"
-        fontSize="0.4em"
-        fontWeight="600"
-        fontFamily="system-ui, sans-serif"
+      {/* High temp label - at the top of the bar - using foreignObject with CSS */}
+      <foreignObject
+        x={centerX - 20}
+        y={highY - 14}
+        width={40}
+        height={12}
       >
-        {Math.round(high)}°
-      </text>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--primary-text-color, #fff)',
+            fontSize: '0.75em',
+            fontWeight: '600',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          {Math.round(high)}°
+        </div>
+      </foreignObject>
       
-      {/* Low temp label - at the bottom of the bar */}
-      <text
-        x={centerX}
-        y={lowY + 12}
-        textAnchor="middle"
-        fill="var(--secondary-text-color, #aaa)"
-        fontSize="0.35em"
-        fontFamily="system-ui, sans-serif"
+      {/* Low temp label - at the bottom of the bar - using foreignObject with CSS */}
+      <foreignObject
+        x={centerX - 20}
+        y={lowY + 2}
+        width={40}
+        height={12}
       >
-        {Math.round(low)}°
-      </text>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--secondary-text-color, #aaa)',
+            fontSize: '0.75em',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          {Math.round(low)}°
+        </div>
+      </foreignObject>
     </g>
   );
 }
@@ -276,7 +345,14 @@ function DayColumn({
 // ============================================================================
 
 export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude, maxItems = 7 }: DailyChartProps) {
-  const items = forecast.slice(0, maxItems);
+  // Filter out today's forecast
+  const today = new Date();
+  const filteredForecast = forecast.filter(item => {
+    const itemDate = new Date(item.datetime);
+    return itemDate.toDateString() !== today.toDateString();
+  });
+  
+  const items = filteredForecast.slice(0, maxItems);
   
   if (items.length === 0) {
     return null;
@@ -285,12 +361,16 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude,
   // Chart dimensions
   const viewWidth = 400;
   const viewHeight = 160;
-  const padding = { left: 5, right: 5 };
+  const padding = { left: 10, right: 10 };
   
   const contentWidth = viewWidth - padding.left - padding.right;
   
   // Calculate column width
   const columnWidth = contentWidth / items.length;
+  
+  // Calculate centering offset if needed
+  const totalColumnsWidth = columnWidth * items.length;
+  const centeringOffset = (contentWidth - totalColumnsWidth) / 2;
   
   // Calculate min/max temps across all days for consistent bar scaling
   const allTemps: number[] = [];
@@ -319,8 +399,8 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude,
         rx={8}
       />
       
-      {/* Day columns */}
-      <g transform={`translate(${padding.left}, 0)`}>
+      {/* Day columns - centered */}
+      <g transform={`translate(${padding.left + centeringOffset}, 0)`}>
         {items.map((item, i) => (
           <DayColumn
             key={i}
@@ -330,6 +410,7 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude,
             minTemp={minTemp}
             maxTemp={maxTemp}
             viewHeight={viewHeight}
+            index={i}
           />
         ))}
       </g>

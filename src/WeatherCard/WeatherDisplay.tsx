@@ -148,6 +148,8 @@ export function WeatherDisplay() {
           maxItems={12} 
         />
       )}
+
+      <hr class="weather-divider" style={{ margin: '-0.5rem 0 0' }} />
       
       {/* Visual daily forecast chart */}
       {dailyForecast && (

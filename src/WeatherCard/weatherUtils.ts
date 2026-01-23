@@ -213,8 +213,8 @@ const TEMP_COLORS = {
 export function getTemperatureColor(tempF: number): string {
   if (tempF > 90) return TEMP_COLORS.hot;
   if (tempF > 89) return interpolateColor(TEMP_COLORS.warm, TEMP_COLORS.hot, (tempF - 89) / 20);
-  if (tempF > 60) return interpolateColor(TEMP_COLORS.mild, TEMP_COLORS.warm, (tempF - 60) / 20);
-  if (tempF > 32) return interpolateColor(TEMP_COLORS.cool, TEMP_COLORS.mild, (tempF - 32) / 18);
+  if (tempF > 72) return interpolateColor(TEMP_COLORS.mild, TEMP_COLORS.warm, (tempF - 72) / 20);
+  if (tempF > 50) return interpolateColor(TEMP_COLORS.cool, TEMP_COLORS.mild, (tempF - 50) / 18);
   if (tempF > 0) return interpolateColor(TEMP_COLORS.cold, TEMP_COLORS.cool, tempF / 32);
   return TEMP_COLORS.freezing;
 }
