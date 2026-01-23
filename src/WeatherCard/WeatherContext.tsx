@@ -36,6 +36,7 @@ export interface WeatherContextValue {
   dailyForecast: WeatherForecast[] | undefined;
   loading: boolean;
   windSpeedUnit: string;
+  precipitationUnit: string;
   sunTimes: SunTimes;
   latitude: number | undefined;
 }
@@ -77,6 +78,7 @@ export function WeatherProvider({
   let hookDailyForecast: WeatherForecast[] | undefined;
   let hookLoading = false;
   let windSpeedUnit = 'mph';
+  let precipitationUnit = 'in';
   let hookSunTimes: SunTimes = { sunrise: undefined, sunset: undefined, dawn: undefined, dusk: undefined };
   let hookLatitude: number | undefined;
   
@@ -87,6 +89,7 @@ export function WeatherProvider({
     const { getHass } = useHass();
     const hass = getHass();
     windSpeedUnit = hass?.config?.unit_system?.wind_speed ?? 'mph';
+    precipitationUnit = hass?.config?.unit_system?.accumulated_precipitation ?? 'in';
     hookLatitude = hass?.config?.latitude;
     
     // Current conditions from primary entity
@@ -132,9 +135,10 @@ export function WeatherProvider({
     dailyForecast,
     loading,
     windSpeedUnit,
+    precipitationUnit,
     sunTimes,
     latitude,
-  }), [config, entity, hourlyForecast, dailyForecast, loading, windSpeedUnit, sunTimes, latitude]);
+  }), [config, entity, hourlyForecast, dailyForecast, loading, windSpeedUnit, precipitationUnit, sunTimes, latitude]);
   
   return (
     <WeatherContext.Provider value={value}>

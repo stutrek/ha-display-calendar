@@ -149,7 +149,6 @@ export const weatherCardStyles = css`
 .wind-unit {
   font-size: 0.625em;
   color: var(--secondary-text-color, #aaa);
-  margin-left: -0.25em;
 }
 
 .wind-gust {

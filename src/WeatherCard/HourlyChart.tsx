@@ -669,14 +669,14 @@ export function HourlyChart({ forecast, sunTimes, latitude, maxItems = 12 }: Hou
       />
       
       {/* Ground layer emoji - in neutral bottom bar */}
-      <GroundLayer
+      {/* <GroundLayer
         forecast={items}
         x={padding.left}
         y={bottomBarY}
         width={contentWidth}
         height={bottomBarHeight * 0.5}
         latitude={latitude}
-      />
+      /> */}
       
       {/* Time labels - in neutral bottom bar */}
       <TimeLabels

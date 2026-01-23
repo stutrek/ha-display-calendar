@@ -24,6 +24,7 @@ const WEATHER_ICONS: Record<string, string> = {
   windy: 'mdi:weather-windy',
   'windy-variant': 'mdi:weather-windy-variant',
   exceptional: 'mdi:alert-circle-outline',
+  clear: 'mdi:weather-sunny',
 };
 
 function getWeatherIcon(condition: string | undefined): string {
@@ -50,6 +51,23 @@ function getWindArrowRotation(bearing: number | undefined): string {
   return `rotate(${bearing + 180}deg)`;
 }
 
+/**
+ * Format weather condition string to be human-readable, excluding "night" from output
+ */
+function formatCondition(condition: string | undefined): string {
+  if (!condition) return '';
+
+  condition = condition.replace('partly', 'partly-');
+  
+  // Split on hyphens, filter out "night", capitalize each word, and join
+  const words = condition
+    .split('-')
+    .filter(word => word !== 'night')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1));
+  
+  return words.join(' ');
+}
+
 // ============================================================================
 // Components
 // ============================================================================
@@ -70,7 +88,7 @@ function CurrentTime() {
 // ============================================================================
 
 export function WeatherDisplay() {
-  const { entity, hourlyForecast, dailyForecast, loading, windSpeedUnit, sunTimes, latitude } = useWeather();
+  const { entity, hourlyForecast, dailyForecast, loading, windSpeedUnit, precipitationUnit, sunTimes, latitude } = useWeather();
   
   if (loading && !entity) {
     return <div class="weather-loading">Loading weather...</div>;
@@ -105,7 +123,7 @@ export function WeatherDisplay() {
         </div>
         
         {/* Conditions text */}
-        <div class="weather-condition">{condition}</div>
+        <div class="weather-condition">{formatCondition(condition)}</div>
       </div>
       
       {/* Details row: humidity/dewpoint and wind */}
@@ -124,12 +142,12 @@ export function WeatherDisplay() {
           <div class="wind-main">
             <ha-icon icon="mdi:weather-windy" />
             <span>
-            <span class="detail-value">{attrs.wind_speed !== undefined ? Math.round(attrs.wind_speed) : '--'} </span>
-            <span class="wind-unit">{windSpeedUnit}</span>
-            </span>
-            {attrs.wind_gust_speed !== undefined && (
-              <span class="wind-gust">({Math.round(attrs.wind_gust_speed)})</span>
+            <span class="detail-value">{attrs.wind_speed !== undefined ? Math.round(attrs.wind_speed) : '--'}{attrs.wind_gust_speed !== undefined && (
+              <span class="wind-gust">/{Math.round(attrs.wind_gust_speed)}</span>
             )}
+            </span>
+            <span class="wind-unit"> {windSpeedUnit}</span>
+            </span>
             <ha-icon 
               icon="mdi:arrow-up" 
               class="wind-arrow"
@@ -158,6 +176,7 @@ export function WeatherDisplay() {
           sunTimes={sunTimes}
           latitude={latitude}
           maxItems={7}
+          precipitationUnit={precipitationUnit}
         />
       )}
     </div>

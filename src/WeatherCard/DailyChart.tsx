@@ -24,6 +24,7 @@ interface DailyChartProps {
   sunTimes: SunTimes;
   latitude: number | undefined;
   maxItems?: number;
+  precipitationUnit: string;
 }
 
 // ============================================================================
@@ -74,9 +75,10 @@ interface DailyPrecipitationProps {
   y: number;
   width: number;
   height: number;
+  precipitationUnit: string;
 }
 
-function DailyPrecipitation({ item, x, y, width, height }: DailyPrecipitationProps) {
+function DailyPrecipitation({ item, x, y, width, height, precipitationUnit }: DailyPrecipitationProps) {
   const precipType = getPrecipitationType(item.condition);
   const precipAmount = getPrecipitationAmount(item.precipitation);
   const precipProb = getPrecipitationProbability(item.precipitation_probability);
@@ -141,7 +143,7 @@ function DailyPrecipitation({ item, x, y, width, height }: DailyPrecipitationPro
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {formattedAmount} in
+        {formattedAmount} {precipitationUnit}
       </div>
     </foreignObject>
   );
@@ -161,6 +163,7 @@ interface DayColumnProps {
   maxTemp: number;
   viewHeight: number;
   index: number;
+  precipitationUnit: string;
 }
 
 function DayColumn({
@@ -171,6 +174,7 @@ function DayColumn({
   maxTemp,
   viewHeight,
   index,
+  precipitationUnit,
 }: DayColumnProps) {
   const centerX = x + width / 2;
   const high = item.temperature ?? 50;
@@ -263,6 +267,7 @@ function DayColumn({
         y={contentTop + 27}
         width={width - padding * 2}
         height={precipLayerHeight}
+        precipitationUnit={precipitationUnit}
       />
       
       {/* Temperature bar clip path */}
@@ -344,7 +349,7 @@ function DayColumn({
 // Main Component
 // ============================================================================
 
-export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude, maxItems = 7 }: DailyChartProps) {
+export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude, maxItems = 7, precipitationUnit }: DailyChartProps) {
   // Filter out today's forecast
   const today = new Date();
   const filteredForecast = forecast.filter(item => {
@@ -411,6 +416,7 @@ export function DailyChart({ forecast, sunTimes: _sunTimes, latitude: _latitude,
             maxTemp={maxTemp}
             viewHeight={viewHeight}
             index={i}
+            precipitationUnit={precipitationUnit}
           />
         ))}
       </g>
