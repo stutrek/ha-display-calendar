@@ -10,7 +10,7 @@ import {
   getTemperatureColor,
   getGroundType,
   getPuddleIntensity,
-  getSeason,
+  // getSeason,
   getPrecipitationSize,
   getPrecipitationOpacity,
   getPrecipitationType,
@@ -261,15 +261,15 @@ interface GroundLayerProps {
 }
 
 // Emoji for each ground type
-const GROUND_EMOJI: Record<string, string[]> = {
-  ice: ['❄️', '🧊', '❄️', '🧊', '❄️'],
-  sand: ['🏜️', '☀️', '🌵', '☀️', '🏜️'],
-  puddles: ['💧', '🌧️', '💧', '🌧️', '💧'],
-  spring: ['🌸', '🌷', '🌼', '🌱', '🌸'],
-  summer: ['🌿', '☘️', '🌻', '🌿', '🍀'],
-  fall: ['🍂', '🍁', '🍂', '🍁', '🍂'],
-  winter: ['🌲', '❄️', '🌲', '🎄', '🌲'],
-};
+// const GROUND_EMOJI: Record<string, string[]> = {
+//   ice: ['❄️', '🧊', '❄️', '🧊', '❄️'],
+//   sand: ['🏜️', '☀️', '🌵', '☀️', '🏜️'],
+//   puddles: ['💧', '🌧️', '💧', '🌧️', '💧'],
+//   spring: ['🌸', '🌷', '🌼', '🌱', '🌸'],
+//   summer: ['🌿', '☘️', '🌻', '🌿', '🍀'],
+//   fall: ['🍂', '🍁', '🍂', '🍁', '🍂'],
+//   winter: ['🌲', '❄️', '🌲', '🎄', '🌲'],
+// };
 
 function GroundLayer({ forecast, x, y, width, height, latitude }: GroundLayerProps) {
   // Determine ground type based on average/dominant conditions
@@ -298,15 +298,6 @@ function GroundLayer({ forecast, x, y, width, height, latitude }: GroundLayerPro
     return null;
   }
   
-  // Get the emoji set for this ground type
-  let emojiSet: string[];
-  if (groundType === 'seasonal') {
-    const season = getSeason(new Date(forecast[0].datetime), latitude);
-    emojiSet = GROUND_EMOJI[season] ?? GROUND_EMOJI.summer;
-  } else {
-    emojiSet = GROUND_EMOJI[groundType] ?? [];
-  }
-  
   // For puddles, still use SVG puddles
   if (groundType === 'puddles') {
     return (
@@ -322,6 +313,16 @@ function GroundLayer({ forecast, x, y, width, height, latitude }: GroundLayerPro
   }
 
   return null;
+
+  // // Get the emoji set for this ground type
+  // let emojiSet: string[];
+  // if (groundType === 'seasonal') {
+  //   const season = getSeason(new Date(forecast[0].datetime), latitude);
+  //   emojiSet = GROUND_EMOJI[season] ?? GROUND_EMOJI.summer;
+  // } else {
+  //   emojiSet = GROUND_EMOJI[groundType] ?? [];
+  // }
+  
   
   // // Render emoji row
   // const numEmoji = Math.min(emojiSet.length, 8);
