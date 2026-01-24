@@ -1,5 +1,5 @@
 {
-  "name": "Display Calendar",
+  "name": "Display Cards",
   "render_readme": true,
-  "filename": "display-calendar.js"
+  "filename": "display-combined.js"
 }

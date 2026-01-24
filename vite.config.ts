@@ -21,6 +21,11 @@ const cardConfigs = {
     name: 'DisplayWeather',
     fileName: 'display-weather.js',
   },
+  combined: {
+    entry: path.resolve(dirname, 'src/Combined/index.tsx'),
+    name: 'DisplayCombined',
+    fileName: 'display-combined.js',
+  },
 };
 
 // Determine which card to build from CARD env var (defaults to 'calendar')
