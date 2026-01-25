@@ -123,11 +123,39 @@ export function WeatherProvider({
   
   // Use prop data if provided, otherwise use hook data
   const entity = propEntity ?? hookEntity;
-  const hourlyForecast = propHourlyForecast ?? hookHourlyForecast;
-  const dailyForecast = propDailyForecast ?? hookDailyForecast;
+  const rawHourlyForecast = propHourlyForecast ?? hookHourlyForecast;
+  const rawDailyForecast = propDailyForecast ?? hookDailyForecast;
   const loading = propEntity ? false : hookLoading;
   const sunTimes = propSunTimes ?? hookSunTimes;
   const latitude = propLatitude ?? hookLatitude;
+  
+  // Filter forecasts to show only future time periods
+  const hourlyForecast = useMemo(() => {
+    if (!rawHourlyForecast) return undefined;
+    
+    // Start from the next whole hour (not current hour)
+    const now = new Date();
+    const nextHour = new Date(now);
+    nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+    
+    return rawHourlyForecast.filter(item => {
+      return new Date(item.datetime) >= nextHour;
+    });
+  }, [rawHourlyForecast]);
+  
+  const dailyForecast = useMemo(() => {
+    if (!rawDailyForecast) return undefined;
+    
+    // Exclude dates before today (using start of day comparison)
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return rawDailyForecast.filter(item => {
+      const itemDate = new Date(item.datetime);
+      const itemStart = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate());
+      return itemStart >= todayStart;
+    });
+  }, [rawDailyForecast]);
   
   const value = useMemo<WeatherContextValue>(() => {
     console.log('[WeatherProvider] useMemo - creating context value');
