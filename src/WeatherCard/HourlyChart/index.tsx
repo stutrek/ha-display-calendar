@@ -107,27 +107,92 @@ export function HourlyChart({
           height: '1.25em',
           pointerEvents: 'none',
         }}>
-          {forecast.map((hour, index) => {
-            // Skip first and last icons
-            if (index === 0 || index === forecast.length - 1) return null;
+          {(() => {
+            // Get container width, use a default if not available yet
+            const container = containerRef.current;
+            const containerWidth = container?.offsetWidth || 400;
             
-            const xPercent = (index / (forecast.length - 1)) * 100;
-            const icon = getWeatherIcon(hour.condition);
+            // Group consecutive hours with the same condition
+            const groups: Array<{ startIndex: number; endIndex: number; condition: string | undefined }> = [];
+            let currentGroup: { startIndex: number; endIndex: number; condition: string | undefined } | null = null;
             
-            return (
-              <ha-icon
-                key={index}
-                icon={icon}
-                style={{
-                  position: 'absolute',
-                  left: `${xPercent}%`,
-                  transform: 'translateX(-50%)',
-                  '--mdc-icon-size': '1.125em',
-                  color: 'var(--primary-text-color, #fff)',
-                }}
-              />
-            );
-          })}
+            forecast.forEach((hour, index) => {
+              // Skip first and last
+              if (index === 0 || index === forecast.length - 1) return;
+              
+              if (!currentGroup || currentGroup.condition !== hour.condition) {
+                // Start new group
+                if (currentGroup) {
+                  groups.push(currentGroup);
+                }
+                currentGroup = {
+                  startIndex: index,
+                  endIndex: index,
+                  condition: hour.condition,
+                };
+              } else {
+                // Extend current group
+                currentGroup.endIndex = index;
+              }
+            });
+            
+            // Push the last group
+            if (currentGroup) {
+              groups.push(currentGroup);
+            }
+            
+            // Find the smallest group width in pixels
+            const smallestGroupWidth = Math.min(...groups.map(group => {
+              const startX = (group.startIndex / (forecast.length - 1));
+              const endX = (group.endIndex / (forecast.length - 1)) + 1;
+              return (endX - startX) * (containerWidth / forecast.length);
+            }));
+            
+            // Calculate icon size based on smallest group (max 1.125em)
+            // Assume icons need ~24px at 1em font size, scale accordingly
+            const maxSize = 1.125;
+            const minSize = 0.5;
+            const iconSize = Math.max(minSize, Math.min(maxSize, smallestGroupWidth / 24));
+            
+            // Render consolidated icons with lines
+            return groups.map((group, groupIndex) => {
+              const icon = getWeatherIcon(group.condition);
+              
+              // Calculate positions
+              const startX = (group.startIndex / (forecast.length - 1)) * 100;
+              const endX = (group.endIndex / (forecast.length - 1)) * 100;
+              const centerX = (startX + endX) / 2;
+              
+              return (
+                <div key={groupIndex}>
+                  {/* Horizontal line spanning the group */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${startX}%`,
+                      right: `${100 - endX}%`,
+                      top: '50%',
+                      height: '0.0625em',
+                      backgroundColor: 'var(--primary-text-color, #fff)',
+                      opacity: 0.3,
+                    }}
+                  />
+                  
+                  {/* Icon in the center */}
+                  <ha-icon
+                    icon={icon}
+                    style={{
+                      position: 'absolute',
+                      left: `${centerX}%`,
+                      transform: 'translateX(-50%)',
+                      '--mdc-icon-size': `${iconSize}em`,
+                      color: 'var(--primary-text-color, #fff)',
+                    }}
+                  />
+                </div>
+              );
+            });
+          })()}
         </div>
         
         {/* Temperature labels overlay */}

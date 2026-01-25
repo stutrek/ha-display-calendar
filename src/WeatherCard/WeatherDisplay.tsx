@@ -162,7 +162,7 @@ export function WeatherDisplay() {
         <HourlyChart 
           forecast={hourlyForecast} 
           sunTimes={sunTimes}
-          maxItems={12} 
+          maxItems={20} 
           height={100}
         />
       )}
