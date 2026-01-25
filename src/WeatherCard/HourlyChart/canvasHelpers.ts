@@ -156,10 +156,10 @@ export function createTemperaturePositioner(
 
 /**
  * Determine if a given datetime is during daytime based on sunrise/sunset
+ * Only compares time-of-day (hours/minutes/seconds), not the full date
  */
 function isDaytime(datetime: string, sunTimes: SunTimes): boolean {
   const date = new Date(datetime);
-  const time = date.getTime();
   
   // Default to daytime if sun times not available
   if (!sunTimes.sunrise || !sunTimes.sunset) {
@@ -167,10 +167,12 @@ function isDaytime(datetime: string, sunTimes: SunTimes): boolean {
     return hour >= 6 && hour < 18;
   }
   
-  const sunrise = sunTimes.sunrise.getTime();
-  const sunset = sunTimes.sunset.getTime();
+  // Extract time-of-day components (hours, minutes, seconds, milliseconds)
+  const timeOfDay = date.getHours() * 3600000 + date.getMinutes() * 60000 + date.getSeconds() * 1000 + date.getMilliseconds();
+  const sunriseTime = sunTimes.sunrise.getHours() * 3600000 + sunTimes.sunrise.getMinutes() * 60000 + sunTimes.sunrise.getSeconds() * 1000 + sunTimes.sunrise.getMilliseconds();
+  const sunsetTime = sunTimes.sunset.getHours() * 3600000 + sunTimes.sunset.getMinutes() * 60000 + sunTimes.sunset.getSeconds() * 1000 + sunTimes.sunset.getMilliseconds();
   
-  return time >= sunrise && time < sunset;
+  return timeOfDay >= sunriseTime && timeOfDay < sunsetTime;
 }
 
 /**
@@ -279,7 +281,13 @@ export function drawHourlyBackground(
   
   // Add sunrise transition if within range
   if (sunTimes.sunrise) {
-    const sunriseTime = sunTimes.sunrise.getTime();
+    let sunriseTime = sunTimes.sunrise.getTime();
+    
+    // If sunrise is in the past (before forecast start), add 24 hours to get tomorrow's sunrise
+    if (sunriseTime < firstTime) {
+      sunriseTime += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
+    }
+    
     if (sunriseTime >= firstTime && sunriseTime <= lastTime) {
       const sunrisePos = getGradientPosition(sunriseTime);
       const offset = 0.001; // Small offset for sharp transition
@@ -296,10 +304,16 @@ export function drawHourlyBackground(
       colorStops.push({ position: Math.min(1, sunrisePos + offset), color: dayColor, isSunEvent: true, isAfterSun: true });
     }
   }
-  
+
   // Add sunset transition if within range
   if (sunTimes.sunset) {
-    const sunsetTime = sunTimes.sunset.getTime();
+    let sunsetTime = sunTimes.sunset.getTime();
+    
+    // If sunset is in the past (before forecast start), add 24 hours to get tomorrow's sunset
+    if (sunsetTime < firstTime) {
+      sunsetTime += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
+    }
+    
     if (sunsetTime >= firstTime && sunsetTime <= lastTime) {
       const sunsetPos = getGradientPosition(sunsetTime);
       const offset = 0.001; // Small offset for sharp transition
