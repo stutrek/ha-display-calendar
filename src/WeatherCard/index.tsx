@@ -24,6 +24,7 @@ interface WeatherCardContentProps {
 }
 
 function WeatherCardContent({ config, hass }: WeatherCardContentProps) {
+  console.log('[WeatherCardContent] RENDER', { config, statesCount: Object.keys(hass.states).length });
   const sizeClass = `size-${config.size ?? 'medium'}`;
   
   return (

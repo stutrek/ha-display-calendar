@@ -88,6 +88,7 @@ function CurrentTime() {
 // ============================================================================
 
 export function WeatherDisplay() {
+  console.log('[WeatherDisplay] RENDER');
   const { entity, hourlyForecast, dailyForecast, loading, windSpeedUnit, precipitationUnit, sunTimes } = useWeather();
   
   if (loading && !entity) {

@@ -69,6 +69,7 @@ function EventItem({ event, onClick }: EventItemProps) {
 }
 
 export function EventList() {
+  console.log('[EventList] RENDER');
   const { eventsForSelectedDay, selectedDay } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<EnrichedEvent | null>(null);
   

@@ -179,6 +179,8 @@ interface HAProviderProps {
 }
 
 export function HAProvider({ hass, children }: HAProviderProps) {
+  console.log('[HAProvider] RENDER', { hasHass: !!hass, statesCount: Object.keys(hass?.states || {}).length });
+  
   // Store hass in a ref to avoid re-renders when it changes
   const hassRef = useRef<HomeAssistant | undefined>(hass);
   
@@ -221,6 +223,7 @@ export function HAProvider({ hass, children }: HAProviderProps) {
 
   // Update ref and notify subscribers when hass changes
   useEffect(() => {
+    console.log('[HAProvider] useEffect - hass changed');
     hassRef.current = hass;
 
     if (!hass) {
@@ -254,11 +257,14 @@ export function HAProvider({ hass, children }: HAProviderProps) {
       }
     }
 
+    console.log('[HAProvider] Entity changes detected:', Array.from(changedEntityIds).slice(0, 10), changedEntityIds.size > 10 ? `... and ${changedEntityIds.size - 10} more` : '');
+
     // Notify subscribers for changed entities
     const subscribers = subscribersRef.current;
     for (const entityId of changedEntityIds) {
       const entitySubscribers = subscribers.get(entityId);
       if (entitySubscribers) {
+        console.log(`[HAProvider] Notifying ${entitySubscribers.size} subscribers for ${entityId}`);
         for (const callback of entitySubscribers) {
           callback();
         }
@@ -269,11 +275,14 @@ export function HAProvider({ hass, children }: HAProviderProps) {
   }, [hass]);
 
   // Create stable store object
-  const store = useMemo<HAStore>(() => ({
-    subscribe,
-    getEntity,
-    getHass,
-  }), [subscribe, getEntity, getHass]);
+  const store = useMemo<HAStore>(() => {
+    console.log('[HAProvider] useMemo - creating store');
+    return {
+      subscribe,
+      getEntity,
+      getHass,
+    };
+  }, [subscribe, getEntity, getHass]);
 
   return (
     <HAContext.Provider value={store}>

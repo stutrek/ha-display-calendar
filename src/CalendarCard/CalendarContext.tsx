@@ -304,8 +304,13 @@ export function CalendarProvider({
   initialDate,
   children,
 }: CalendarProviderProps) {
+  console.log('[CalendarProvider] RENDER');
+  
   // Normalize config to fill in missing colors
-  const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
+  const config = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - normalizing config');
+    return normalizeConfig(rawConfig);
+  }, [rawConfig]);
   
   const [today, setToday] = useState(() => {
     const now = new Date();
@@ -334,6 +339,7 @@ export function CalendarProvider({
   
   // Date range for fetching (covers the visible calendar month grid)
   const dateRange = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - calculating dateRange');
     // First day of the month
     const firstOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     // Last day of the month
@@ -354,10 +360,10 @@ export function CalendarProvider({
   }, [currentMonth]);
   
   // Get entity IDs from config
-  const calendarEntityIds = useMemo(
-    () => config.calendars.map(c => c.entityId),
-    [config.calendars]
-  );
+  const calendarEntityIds = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - calculating calendarEntityIds');
+    return config.calendars.map(c => c.entityId);
+  }, [config.calendars]);
   
   // Use HAContext hooks to fetch data (only runs if inside HAProvider)
   // These hooks gracefully handle missing HAProvider by returning errors
@@ -389,13 +395,14 @@ export function CalendarProvider({
   const refreshing = propEvents ? false : hookRefreshing;
   
   // Process all events (dedupe, enrich with colors and weather)
-  const allEvents = useMemo(
-    () => processEvents(events, config, hourlyForecast),
-    [events, config, hourlyForecast]
-  );
+  const allEvents = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - processing events', { eventsCount: events.length, forecastCount: hourlyForecast.length });
+    return processEvents(events, config, hourlyForecast);
+  }, [events, config, hourlyForecast]);
   
   // Events for selected day
   const eventsForSelectedDay = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - calculating eventsForSelectedDay');
     const dayEvents = allEvents.filter(event => {
       const start = parseEventDate(event.start);
       const end = parseEventDate(event.end);
@@ -408,6 +415,7 @@ export function CalendarProvider({
   
   // Pre-compute colors for each day to avoid O(days × events) in render
   const colorsByDay = useMemo(() => {
+    console.log('[CalendarProvider] useMemo - calculating colorsByDay');
     const map = new Map<string, Set<string>>();
     for (const event of allEvents) {
       const start = parseEventDate(event.start);
@@ -499,7 +507,9 @@ export function CalendarProvider({
     return () => clearTimeout(timer);
   }, [selectedDay, currentMonth, today, goToToday]);
   
-  const value = useMemo<CalendarContextValue>(() => ({
+  const value = useMemo<CalendarContextValue>(() => {
+    console.log('[CalendarProvider] useMemo - creating context value');
+    return {
     config,
     currentMonth,
     selectedDay,
@@ -512,7 +522,8 @@ export function CalendarProvider({
     selectDay,
     eventsForSelectedDay,
     getColorsForDay,
-  }), [config, currentMonth, selectedDay, today, loading, refreshing, nextMonth, prevMonth, goToToday, selectDay, eventsForSelectedDay, getColorsForDay]);
+  };
+  }, [config, currentMonth, selectedDay, today, loading, refreshing, nextMonth, prevMonth, goToToday, selectDay, eventsForSelectedDay, getColorsForDay]);
   
   return (
     <CalendarContext.Provider value={value}>

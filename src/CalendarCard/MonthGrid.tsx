@@ -43,6 +43,7 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 export function MonthGrid() {
+  console.log('[MonthGrid] RENDER');
   const {
     currentMonth,
     selectedDay,

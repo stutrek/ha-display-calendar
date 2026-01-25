@@ -26,6 +26,7 @@ interface CalendarCardContentProps {
 }
 
 export function CalendarCardInner() {
+  console.log('[CalendarCardInner] RENDER');
   const { loading, refreshing } = useCalendar();
   
   return (
@@ -46,6 +47,7 @@ export function CalendarCardInner() {
 }
 
 function CalendarCardContent({ config, hass }: CalendarCardContentProps) {
+  console.log('[CalendarCardContent] RENDER', { config, statesCount: Object.keys(hass.states).length });
   const sizeClass = `size-${config.fontSize || 'small'}`;
   return (
     <>

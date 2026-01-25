@@ -32,6 +32,7 @@ export function HourlyChart({
   pixelsPerDegree = 3,
   maxItems = 12
 }: HourlyChartProps): JSX.Element {
+  console.log('[HourlyChart] RENDER', { forecastCount: inputForecast.length });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
