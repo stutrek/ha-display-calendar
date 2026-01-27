@@ -209,8 +209,10 @@ export function drawTemperatureLine(
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
   
-  const width = canvas.width;
-  const height = canvas.height;
+  // Get device pixel ratio and logical dimensions
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   
   // Use shared temperature positioner
   const { getTempY } = createTemperaturePositioner(forecast, height, pixelsPerDegree);

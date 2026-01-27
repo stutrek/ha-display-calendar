@@ -46,11 +46,24 @@ export function HourlyChart({
     const container = containerRef.current;
     if (!canvas || !container || !forecast || forecast.length === 0) return;
 
-    // Set canvas size to match container
+    // Set canvas size to match container with device pixel ratio
     const updateCanvas = () => {
       const containerWidth = container.offsetWidth;
-      canvas.width = containerWidth;
-      canvas.height = height;
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Set CSS size (logical pixels)
+      canvas.style.width = `${containerWidth}px`;
+      canvas.style.height = `${height}px`;
+      
+      // Set actual canvas size (physical pixels)
+      canvas.width = containerWidth * dpr;
+      canvas.height = height * dpr;
+      
+      // Scale context to match device pixel ratio
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
+      }
       
       // Draw layers in order
       drawSkyBackground(canvas, forecast, sunTimes);

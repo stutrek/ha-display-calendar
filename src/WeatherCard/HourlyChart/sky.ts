@@ -131,8 +131,10 @@ export function drawSkyBackground(
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
   
-  const width = canvas.width;
-  const height = canvas.height;
+  // Get device pixel ratio and logical dimensions
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   
   // Clear canvas
   ctx.clearRect(0, 0, width, height);
@@ -246,8 +248,10 @@ export function applyTemperatureMask(
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
   
-  const width = canvas.width;
-  const height = canvas.height;
+  // Get device pixel ratio and actual canvas dimensions
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.width / dpr;  // Logical width
+  const height = canvas.height / dpr; // Logical height
   
   // Use the temperature positioner to get line positions
   const { getTempY } = createTemperaturePositioner(forecast, height, pixelsPerDegree);
@@ -257,56 +261,63 @@ export function applyTemperatureMask(
     return (index / (forecast.length - 1)) * width;
   };
   
-  // Create offscreen canvas for the shape
+  // Create offscreen canvas for the shape (account for device pixel ratio)
   const shapeCanvas = document.createElement('canvas');
-  shapeCanvas.width = width + MASK_BLUR_RADIUS * 2;
-  shapeCanvas.height = height;
+  const shapeWidth = (width + MASK_BLUR_RADIUS * 2) * dpr;
+  const shapeHeight = height * dpr;
+  shapeCanvas.width = shapeWidth;
+  shapeCanvas.height = shapeHeight;
   const shapeCtx = shapeCanvas.getContext('2d');
   if (!shapeCtx) return;
+  // Don't scale - draw directly in physical pixel coordinates
   
   // Draw the temperature fill shape (area from temp line to bottom)
   shapeCtx.beginPath();
-  shapeCtx.moveTo(0, height); // Start at bottom-left
+  shapeCtx.moveTo(0, height * dpr); // Start at bottom-left (physical pixels)
   
   // Follow temperature line
   forecast.forEach((hour, index) => {
-    let x = getHourX(index) + MASK_BLUR_RADIUS;
-    const y = getTempY(hour.temperature ?? 0);
+    let x = (getHourX(index) + MASK_BLUR_RADIUS) * dpr;
+    const y = getTempY(hour.temperature ?? 0) * dpr;
 	if (index === 0) {
-		x -= MASK_BLUR_RADIUS;
+		x -= MASK_BLUR_RADIUS * dpr;
 	}
 	if (index === forecast.length - 1) {
-		x += MASK_BLUR_RADIUS;
+		x += MASK_BLUR_RADIUS * dpr;
 	}
     shapeCtx.lineTo(x, y);
   });
   
   // Complete the shape to bottom-right and back
-  shapeCtx.lineTo(width, height);
+  shapeCtx.lineTo(width * dpr, height * dpr);
   shapeCtx.closePath();
   
   // Fill with solid white
   shapeCtx.fillStyle = 'white';
   shapeCtx.fill();
   
-  // Create second offscreen canvas for the blurred/brightened mask
+  // Create second offscreen canvas for the blurred/brightened mask (account for device pixel ratio)
   const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = width;
-  maskCanvas.height = height;
+  maskCanvas.width = width * dpr;
+  maskCanvas.height = height * dpr;
   const maskCtx = maskCanvas.getContext('2d');
   if (!maskCtx) return;
+  // Don't scale maskCtx - we'll draw the shapeCanvas directly at physical pixel coordinates
   
-  // Apply blur and brightness to the shape on the mask canvas
-  maskCtx.filter = `blur(${MASK_BLUR_RADIUS}px)`;
+  // Apply blur filter - blur operates on physical pixels, so we need to scale the radius
+  maskCtx.filter = `blur(${MASK_BLUR_RADIUS * dpr}px)`;
   // Draw the shape multiple times to make the fade more aggressive
-  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS, 0);
-  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS, 0);
-  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS, 0);
+  // shapeCanvas is already at physical pixel dimensions, so draw at physical coordinates
+  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS * dpr, 0);
+  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS * dpr, 0);
+  maskCtx.drawImage(shapeCanvas, -MASK_BLUR_RADIUS * dpr, 0);
   
   // Now draw the processed mask onto main canvas with destination-out
+  // maskCanvas is at physical pixel dimensions, but main ctx is scaled by dpr
+  // So we need to draw it at the scaled size
   ctx.save();
   ctx.globalCompositeOperation = 'destination-out';
-  ctx.drawImage(maskCanvas, 0, 0);
+  ctx.drawImage(maskCanvas, 0, 0, width, height);
   ctx.restore();
 }
 
@@ -322,8 +333,10 @@ export function drawStars(
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
   
-  const width = canvas.width;
-  const height = canvas.height;
+  // Get device pixel ratio and logical dimensions
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   const segmentWidth = width / forecast.length;
   
   // Only draw stars in the top 25% of the canvas
@@ -390,8 +403,10 @@ export function drawClouds(
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
   
-  const width = canvas.width;
-  const height = canvas.height;
+  // Get device pixel ratio and logical dimensions
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.width / dpr;
+  const height = canvas.height / dpr;
   const segmentWidth = width / forecast.length;
   
   // Only draw clouds in the top 25% of the canvas
