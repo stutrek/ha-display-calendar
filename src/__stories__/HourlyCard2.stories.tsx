@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { HourlyChart } from '../WeatherCard/HourlyChart';
 import type { SunTimes } from '../WeatherCard/WeatherContext';
 import { createAdaptiveTemperatureColorFn } from '../WeatherCard/HourlyChart/colors';
+import { getAllStyles } from '../shared/styleRegistry';
+// Import component styles to register them
+import '../WeatherCard/HourlyChart/styles';
 import * as samples from './hourlyWeatherSamples';
 
 // Helper to create color function from sample data
@@ -26,6 +29,14 @@ const meta: Meta<typeof HourlyChart> = {
       values: [{ name: 'dark', value: '#0d0d0d' }],
     },
   },
+  decorators: [
+    (Story) => (
+      <>
+        <style>{getAllStyles()}</style>
+        <Story />
+      </>
+    ),
+  ],
 };
 
 export default meta;
