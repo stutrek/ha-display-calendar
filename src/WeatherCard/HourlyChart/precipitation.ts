@@ -7,6 +7,7 @@ import type { WeatherForecast } from '../WeatherContext';
 import type { Bounds } from './voronoiRelaxation';
 import { generatePoissonPoints } from './poissonDiskSampling';
 import { generateRelaxedPoints } from './voronoiRelaxation';
+import { createRng } from './random';
 
 // Algorithm selection
 type DistributionAlgorithm = 'voronoi' | 'poisson';
@@ -112,6 +113,9 @@ export function drawPrecipitation(
     
     if (!isRain && !isSnow) return;
     
+    // Create seeded RNG for this hour segment (consistent across re-renders)
+    const rng = createRng(hour.datetime + '-precip');
+    
     // Calculate segment bounds
     const segmentBounds: Bounds = {
       x: index * segmentWidth,
@@ -133,21 +137,21 @@ export function drawPrecipitation(
       // Voronoi relaxation (Lloyd's algorithm) - more uniform aesthetic
       // Adjust iterations based on particle count: fewer particles need less relaxation
       const iterations = Math.min(5, Math.max(1, Math.ceil(particleCount / 3)));
-      points = generateRelaxedPoints(particleCount, segmentBounds, iterations);
+      points = generateRelaxedPoints(particleCount, segmentBounds, iterations, rng);
     } else {
       // Poisson disk sampling - guaranteed minimum distance
       // Calculate minimum distance based on particle density
       const areaPerParticle = segmentArea / particleCount;
       const calculatedDistance = Math.sqrt(areaPerParticle) * 0.9;
       const minDistance = Math.max(8, Math.min(20, calculatedDistance));
-      points = generatePoissonPoints(particleCount, segmentBounds, minDistance);
+      points = generatePoissonPoints(particleCount, segmentBounds, minDistance, 30, rng);
     }
     
-    // Determine emoji for each particle
+    // Determine emoji for each particle (deterministic for mixed precipitation)
     const getEmoji = (): string => {
       if (isRain && isSnow) {
-        // Mixed: randomly choose
-        return Math.random() < 0.5 ? '💧' : '❄️';
+        // Mixed: deterministically choose
+        return rng() < 0.5 ? '💧' : '❄️';
       }
       if (isSnow) return '❄️';
       return '💧';

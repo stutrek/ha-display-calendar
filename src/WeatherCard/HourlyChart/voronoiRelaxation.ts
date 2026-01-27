@@ -20,13 +20,13 @@ export interface Bounds {
 /**
  * Generate random points within bounds
  */
-function generateRandomPoints(count: number, bounds: Bounds): Point[] {
+function generateRandomPoints(count: number, bounds: Bounds, rng: () => number): Point[] {
   const points: Point[] = [];
   
   for (let i = 0; i < count; i++) {
     points.push({
-      x: bounds.x + Math.random() * bounds.width,
-      y: bounds.y + Math.random() * bounds.height,
+      x: bounds.x + rng() * bounds.width,
+      y: bounds.y + rng() * bounds.height,
     });
   }
   
@@ -134,17 +134,19 @@ function lloydIteration(points: Point[], bounds: Bounds): Point[] {
  * @param count - Number of points to generate
  * @param bounds - Bounding box for point generation
  * @param iterations - Number of relaxation iterations (default: 4)
+ * @param rng - Optional seeded random number generator (default: Math.random)
  * @returns Array of relaxed points
  */
 export function generateRelaxedPoints(
   count: number,
   bounds: Bounds,
-  iterations: number = 4
+  iterations: number = 4,
+  rng: () => number = Math.random
 ): Point[] {
   if (count <= 0) return [];
   
   // Start with random points
-  let points = generateRandomPoints(count, bounds);
+  let points = generateRandomPoints(count, bounds, rng);
   
   // Apply Lloyd's relaxation for the specified number of iterations
   for (let i = 0; i < iterations; i++) {

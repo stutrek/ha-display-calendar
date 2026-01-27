@@ -99,12 +99,14 @@ class SpatialGrid {
  * @param bounds - Bounding box for point generation
  * @param minDistance - Optional minimum distance between points
  * @param maxAttempts - Maximum attempts per point (default: 30)
+ * @param rng - Optional seeded random number generator (default: Math.random)
  */
 export function generatePoissonPoints(
   count: number,
   bounds: Bounds,
   minDistance?: number,
-  maxAttempts: number = 30
+  maxAttempts: number = 30,
+  rng: () => number = Math.random
 ): Point[] {
   if (count <= 0) return [];
   
@@ -125,8 +127,8 @@ export function generatePoissonPoints(
   
   // Start with one random point
   const firstPoint: Point = {
-    x: bounds.x + Math.random() * bounds.width,
-    y: bounds.y + Math.random() * bounds.height,
+    x: bounds.x + rng() * bounds.width,
+    y: bounds.y + rng() * bounds.height,
   };
   
   points.push(firstPoint);
@@ -136,7 +138,7 @@ export function generatePoissonPoints(
   // Generate points until we reach target count or run out of active points
   while (activeList.length > 0 && points.length < count * 2) {
     // Pick a random active point
-    const activeIndex = Math.floor(Math.random() * activeList.length);
+    const activeIndex = Math.floor(rng() * activeList.length);
     const activePoint = activeList[activeIndex];
     
     let found = false;
@@ -144,8 +146,8 @@ export function generatePoissonPoints(
     // Try to generate a new point around it
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       // Generate candidate point in annulus between minDistance and 2*minDistance
-      const angle = Math.random() * 2 * Math.PI;
-      const radius = minDistance + Math.random() * minDistance;
+      const angle = rng() * 2 * Math.PI;
+      const radius = minDistance + rng() * minDistance;
       
       const candidate: Point = {
         x: activePoint.x + radius * Math.cos(angle),

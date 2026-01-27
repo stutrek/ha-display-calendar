@@ -8,6 +8,7 @@ import type { Bounds } from './voronoiRelaxation';
 import { generateRelaxedPoints } from './voronoiRelaxation';
 import { createTemperaturePositioner } from './canvasHelpers';
 import { supportsNativeBlur, blurCanvasInPlace } from './blur';
+import { createRng } from './random';
 
 // ============================================================================
 // Constants
@@ -355,6 +356,9 @@ export function drawStars(
     // Only draw stars at night
     if (isDaytime(hour.datetime, sunTimes)) return;
     
+    // Create seeded RNG for this hour segment (consistent across re-renders)
+    const rng = createRng(hour.datetime + '-stars');
+    
     // More stars when sky is clearer (less cloud coverage)
     const cloudCoverage = hour.cloud_coverage ?? 50;
     const clearness = 1 - (cloudCoverage / 100);
@@ -376,18 +380,18 @@ export function drawStars(
     
     // Generate evenly-distributed points using voronoi relaxation
     const iterations = Math.min(3, Math.max(1, Math.ceil(starCount / 5)));
-    const points = generateRelaxedPoints(starCount, segmentBounds, iterations);
+    const points = generateRelaxedPoints(starCount, segmentBounds, iterations, rng);
     
     // Draw stars as white dots of varying sizes
     ctx.save();
     ctx.fillStyle = 'white';
     
     points.forEach(point => {
-      // Random size between 1-3px radius
-      const radius = 0.5 + Math.random() * 1.5;
+      // Deterministic size between 1-3px radius
+      const radius = 0.5 + rng() * 1.5;
       
-      // Random brightness/opacity
-      const opacity = 0.4 + Math.random() * 0.6;
+      // Deterministic brightness/opacity
+      const opacity = 0.4 + rng() * 0.6;
       ctx.globalAlpha = opacity;
       
       ctx.beginPath();
@@ -425,6 +429,9 @@ export function drawClouds(
     // Only draw clouds during daytime
     if (!isDaytime(hour.datetime, sunTimes)) return;
     
+    // Create seeded RNG for this hour segment (consistent across re-renders)
+    const rng = createRng(hour.datetime + '-clouds');
+    
     const cloudCoverage = hour.cloud_coverage ?? 0;
     
     // Skip if no cloud coverage
@@ -447,12 +454,12 @@ export function drawClouds(
     
     // Generate evenly-distributed points using voronoi relaxation
     const iterations = Math.min(3, Math.max(1, Math.ceil(cloudCount / 3)));
-    const points = generateRelaxedPoints(cloudCount, segmentBounds, iterations);
+    const points = generateRelaxedPoints(cloudCount, segmentBounds, iterations, rng);
     
     // Draw cloud emoji at each point
     points.forEach(point => {
-      // Vary cloud size slightly
-      const size = 10 + Math.random() * 4;
+      // Deterministic cloud size
+      const size = 10 + rng() * 4;
       drawEmoji(ctx, '☁️', point.x, point.y, size);
     });
   });

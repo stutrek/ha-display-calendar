@@ -6,6 +6,7 @@
 import type { WeatherForecast } from '../WeatherContext';
 import type { Bounds } from '../HourlyChart/voronoiRelaxation';
 import { generateRelaxedPoints } from '../HourlyChart/voronoiRelaxation';
+import { createRng } from '../HourlyChart/random';
 
 // ============================================================================
 // Helper Functions
@@ -106,6 +107,9 @@ export function drawPrecipitation(
     
     if (!isRain && !isSnow) return;
     
+    // Create seeded RNG for this day (consistent across re-renders)
+    const rng = createRng(day.datetime + '-daily-precip');
+    
     // Calculate column bounds - FULL HEIGHT from top to bottom
     const columnBounds: Bounds = {
       x: index * columnWidth,
@@ -123,13 +127,13 @@ export function drawPrecipitation(
     // Use Voronoi relaxation for natural distribution
     // Adjust iterations based on particle count
     const iterations = Math.min(5, Math.max(1, Math.ceil(particleCount / 3)));
-    const points = generateRelaxedPoints(particleCount, columnBounds, iterations);
+    const points = generateRelaxedPoints(particleCount, columnBounds, iterations, rng);
     
-    // Determine emoji for each particle
+    // Determine emoji for each particle (deterministic for mixed precipitation)
     const getEmoji = (): string => {
       if (isRain && isSnow) {
-        // Mixed: randomly choose
-        return Math.random() < 0.5 ? '💧' : '❄️';
+        // Mixed: deterministically choose
+        return rng() < 0.5 ? '💧' : '❄️';
       }
       if (isSnow) return '❄️';
       return '💧';
