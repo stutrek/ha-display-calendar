@@ -2,6 +2,8 @@ import type { Preview } from '@storybook/preact-vite'
 
 // Register mock ha-icon component for Storybook (uses @mdi/js for real icons)
 import '../src/__stories__/ha-icon-mock';
+// Register mock ha-card component for Storybook
+import '../src/__stories__/ha-card-mock';
 
 const preview: Preview = {
   parameters: {

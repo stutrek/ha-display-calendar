@@ -8,6 +8,7 @@ import 'preact';
 declare module 'preact' {
   namespace JSX {
     interface IntrinsicElements {
+      'ha-card': preact.JSX.HTMLAttributes<HTMLElement>;
       'ha-icon': preact.JSX.HTMLAttributes<HTMLElement> & {
         icon?: string;
       };

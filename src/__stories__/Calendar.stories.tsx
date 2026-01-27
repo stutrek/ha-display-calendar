@@ -52,19 +52,11 @@ function CalendarWidget({
       initialDate={initialDate}
     >
       <style>{getAllStyles()}</style>
-      <div 
-        class={`calendar-card size-${fontSize}`}
-        style={{ 
-          width: '400px', 
-          background: '#1c1c1c', 
-          borderRadius: '12px',
-          padding: '1em',
-          color: '#fff',
-        }}
-      >
-
-        <CalendarCardInner />
-      </div>
+      <ha-card class={`size-${fontSize}`} style={{ width: '400px' }}>
+        <div class="card-content calendar-card">
+          <CalendarCardInner />
+        </div>
+      </ha-card>
     </CalendarProvider>
   );
 }

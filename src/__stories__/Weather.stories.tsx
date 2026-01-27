@@ -111,18 +111,11 @@ function WeatherWidget({
       latitude={latitude}
     >
       <style>{getAllStyles()}</style>
-      <div 
-        class={`weather-card size-${fontSize}`}
-        style={{ 
-          width: '400px', 
-          background: '#1c1c1c', 
-          borderRadius: '12px',
-          padding: '1em',
-          color: '#fff',
-        }}
-      >
-        <WeatherDisplay />
-      </div>
+      <ha-card class={`size-${fontSize}`} style={{ width: '400px' }}>
+        <div class="card-content weather-card">
+          <WeatherDisplay />
+        </div>
+      </ha-card>
     </WeatherProvider>
   );
 }

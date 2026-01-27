@@ -54,13 +54,15 @@ function CalendarCardContent({ config, hass, subscribeToEntity }: CalendarCardCo
   return (
     <>
       <style>{getAllStyles()}</style>
-      <div class={`calendar-card ${sizeClass}`}>
-        <HAProvider hass={hass} subscribeToEntity={subscribeToEntity}>
-          <CalendarProvider config={config}>
-            <CalendarCardInner />
-          </CalendarProvider>
-        </HAProvider>
-      </div>
+      <ha-card class={sizeClass}>
+        <div class="card-content calendar-card">
+          <HAProvider hass={hass} subscribeToEntity={subscribeToEntity}>
+            <CalendarProvider config={config}>
+              <CalendarCardInner />
+            </CalendarProvider>
+          </HAProvider>
+        </div>
+      </ha-card>
     </>
   );
 }
@@ -117,9 +119,11 @@ class DisplayCalendarCard extends BaseHACard<CardConfig> {
       render(
         <>
           <style>{getAllStyles()}</style>
-          <div class={`calendar-card ${sizeClass}`}>
-            <div class="calendar-loading">Add a calendar to get started</div>
-          </div>
+          <ha-card class={sizeClass}>
+            <div class="card-content calendar-card">
+              <div class="calendar-loading">Add a calendar to get started</div>
+            </div>
+          </ha-card>
         </>,
         this._shadowRoot
       );

@@ -32,13 +32,15 @@ function WeatherCardContent({ config, hass, subscribeToEntity }: WeatherCardCont
   return (
     <>
       <style>{getAllStyles()}</style>
-      <div class={`weather-card ${sizeClass}`}>
-        <HAProvider hass={hass} subscribeToEntity={subscribeToEntity}>
-          <WeatherProvider config={config}>
-            <WeatherDisplay />
-          </WeatherProvider>
-        </HAProvider>
-      </div>
+      <ha-card class={sizeClass}>
+        <div class="card-content weather-card">
+          <HAProvider hass={hass} subscribeToEntity={subscribeToEntity}>
+            <WeatherProvider config={config}>
+              <WeatherDisplay />
+            </WeatherProvider>
+          </HAProvider>
+        </div>
+      </ha-card>
     </>
   );
 }

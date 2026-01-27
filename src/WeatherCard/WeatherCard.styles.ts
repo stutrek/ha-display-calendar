@@ -6,22 +6,20 @@ export const weatherCardStyles = css`
 }
 
 .weather-card {
-  background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
-  border-radius: var(--ha-card-border-radius, 12px);
-  padding: 0.5em 1em 0.5em;
   color: var(--primary-text-color, #fff);
   font-family: system-ui, -apple-system, sans-serif;
+  padding: 0.5em 1em 0.5em;
 }
 
-.weather-card.size-small {
+ha-card.size-small {
   font-size: 14px;
 }
 
-.weather-card.size-medium {
+ha-card.size-medium {
   font-size: 17.5px;
 }
 
-.weather-card.size-large {
+ha-card.size-large {
   font-size: 21px;
 }
 
