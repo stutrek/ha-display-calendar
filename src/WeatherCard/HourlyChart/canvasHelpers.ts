@@ -5,16 +5,6 @@
 
 import type { WeatherForecast, SunTimes } from '../WeatherContext';
 
-// ============================================================================
-// Color Palette
-// ============================================================================
-
-const COLORS = {
-  dayClear: '#5FB3F6',      // Bright sky blue
-  dayCloudy: '#8A97A8',     // Cool grey
-  nightClear: '#2D1B4E',    // Deep violet
-  nightCloudy: '#1A1F2E',   // Dark charcoal
-};
 
 /**
  * Get color for a temperature value (0°F to 104°F extended range)
@@ -158,7 +148,7 @@ export function createTemperaturePositioner(
  * Determine if a given datetime is during daytime based on sunrise/sunset
  * Only compares time-of-day (hours/minutes/seconds), not the full date
  */
-function isDaytime(datetime: string, sunTimes: SunTimes): boolean {
+export function isDaytime(datetime: string, sunTimes: SunTimes): boolean {
   const date = new Date(datetime);
   
   // Default to daytime if sun times not available
@@ -204,148 +194,9 @@ function rgbToHex(r: number, g: number, b: number): string {
   return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * Get the color for a specific hour based on cloud coverage and day/night
- */
-function getHourColor(
-  datetime: string,
-  cloudCoverage: number | undefined,
-  sunTimes: SunTimes
-): string {
-  const isDay = isDaytime(datetime, sunTimes);
-  const coverage = (cloudCoverage ?? 50) / 100; // Convert to 0-1 range
-  
-  if (isDay) {
-    // Interpolate between clear blue and cloudy grey
-    return interpolateColor(COLORS.dayClear, COLORS.dayCloudy, coverage);
-  } else {
-    // Interpolate between clear violet and cloudy dark charcoal
-    return interpolateColor(COLORS.nightClear, COLORS.nightCloudy, coverage);
-  }
-}
-
 // ============================================================================
 // Main Drawing Functions
 // ============================================================================
-
-/**
- * Draw the hourly background gradient on the canvas
- */
-export function drawHourlyBackground(
-  canvas: HTMLCanvasElement,
-  forecast: WeatherForecast[],
-  sunTimes: SunTimes
-): void {
-  const ctx = canvas.getContext('2d');
-  if (!ctx || !forecast || forecast.length === 0) return;
-  
-  const width = canvas.width;
-  const height = canvas.height;
-  
-  // Clear canvas
-  ctx.clearRect(0, 0, width, height);
-  
-  // Set transparency for background
-  ctx.globalAlpha = 0.8;
-  
-  // Create horizontal linear gradient
-  const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  
-  // Get timeframe boundaries
-  const firstTime = new Date(forecast[0].datetime).getTime();
-  const lastTime = new Date(forecast[forecast.length - 1].datetime).getTime();
-  const timeRange = lastTime - firstTime;
-  
-  // Helper to convert timestamp to gradient position (0-1)
-  const getGradientPosition = (timestamp: number): number => {
-    if (timeRange === 0) return 0;
-    return (timestamp - firstTime) / timeRange;
-  };
-  
-  // Collect all color stops
-  interface ColorStop {
-    position: number;
-    color: string;
-    isSunEvent?: boolean;
-    isAfterSun?: boolean;
-  }
-  
-  const colorStops: ColorStop[] = [];
-  
-  // Add color stops for each hour
-  forecast.forEach((hour, index) => {
-    const position = index / (forecast.length - 1);
-    const color = getHourColor(hour.datetime, hour.cloud_coverage, sunTimes);
-    colorStops.push({ position, color });
-  });
-  
-  // Add sunrise transition if within range
-  if (sunTimes.sunrise) {
-    let sunriseTime = sunTimes.sunrise.getTime();
-    
-    // If sunrise is in the past (before forecast start), add 24 hours to get tomorrow's sunrise
-    if (sunriseTime < firstTime) {
-      sunriseTime += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
-    }
-    
-    if (sunriseTime >= firstTime && sunriseTime <= lastTime) {
-      const sunrisePos = getGradientPosition(sunriseTime);
-      const offset = 0.001; // Small offset for sharp transition
-      
-      // Get average cloud coverage around sunrise for smooth cloud transition
-      const avgCloudCoverage = forecast.reduce((sum, h) => sum + (h.cloud_coverage ?? 50), 0) / forecast.length;
-      
-      // Just before sunrise: night color
-      const nightColor = interpolateColor(COLORS.nightClear, COLORS.nightCloudy, avgCloudCoverage / 100);
-      colorStops.push({ position: Math.max(0, sunrisePos - offset), color: nightColor, isSunEvent: true });
-      
-      // Just after sunrise: day color
-      const dayColor = interpolateColor(COLORS.dayClear, COLORS.dayCloudy, avgCloudCoverage / 100);
-      colorStops.push({ position: Math.min(1, sunrisePos + offset), color: dayColor, isSunEvent: true, isAfterSun: true });
-    }
-  }
-
-  // Add sunset transition if within range
-  if (sunTimes.sunset) {
-    let sunsetTime = sunTimes.sunset.getTime();
-    
-    // If sunset is in the past (before forecast start), add 24 hours to get tomorrow's sunset
-    if (sunsetTime < firstTime) {
-      sunsetTime += 24 * 60 * 60 * 1000; // Add 24 hours in milliseconds
-    }
-    
-    if (sunsetTime >= firstTime && sunsetTime <= lastTime) {
-      const sunsetPos = getGradientPosition(sunsetTime);
-      const offset = 0.001; // Small offset for sharp transition
-      
-      // Get average cloud coverage around sunset for smooth cloud transition
-      const avgCloudCoverage = forecast.reduce((sum, h) => sum + (h.cloud_coverage ?? 50), 0) / forecast.length;
-      
-      // Just before sunset: day color
-      const dayColor = interpolateColor(COLORS.dayClear, COLORS.dayCloudy, avgCloudCoverage / 100);
-      colorStops.push({ position: Math.max(0, sunsetPos - offset), color: dayColor, isSunEvent: true });
-      
-      // Just after sunset: night color
-      const nightColor = interpolateColor(COLORS.nightClear, COLORS.nightCloudy, avgCloudCoverage / 100);
-      colorStops.push({ position: Math.min(1, sunsetPos + offset), color: nightColor, isSunEvent: true, isAfterSun: true });
-    }
-  }
-  
-  // Sort color stops by position
-  colorStops.sort((a, b) => a.position - b.position);
-  
-  // Add all color stops to gradient
-  colorStops.forEach(stop => {
-    gradient.addColorStop(stop.position, stop.color);
-  });
-  
-  // Fill the entire canvas with the gradient
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-  
-  // Reset alpha for subsequent drawings
-  ctx.globalAlpha = 1.0;
-}
 
 /**
  * Draw the temperature line with gradient fill underneath
