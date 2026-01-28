@@ -89,12 +89,11 @@ function drawEmoji(
 export function drawPrecipitation(
   canvas: HTMLCanvasElement,
   forecast: WeatherForecast[],
-  columnWidth: number
+  columnWidth: number,
+  logicalHeight: number
 ): void {
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
-  
-  const height = canvas.height;
   
   // Process each day's column independently
   forecast.forEach((day, index) => {
@@ -115,11 +114,11 @@ export function drawPrecipitation(
       x: index * columnWidth,
       y: 0,
       width: columnWidth,
-      height: height, // Full canvas height
+      height: logicalHeight, // Full canvas height
     };
     
     // Calculate particle count based on column area and precipitation type
-    const columnArea = columnWidth * height;
+    const columnArea = columnWidth * logicalHeight;
     const particleCount = getParticleCount(precipitation, columnArea, isSnow);
     
     if (particleCount === 0) return;

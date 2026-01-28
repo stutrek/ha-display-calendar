@@ -74,18 +74,30 @@ export function DailyChart({
 
     const updateCanvas = () => {
       const containerWidth = container.offsetWidth;
+      const dpr = window.devicePixelRatio || 1;
       const columnCount = Math.max(1, Math.min(forecast.length, Math.floor(containerWidth / minColumnWidth)));
       const columnWidth = containerWidth / columnCount;
       
-      canvas.width = containerWidth;
-      canvas.height = height;
+      // Set CSS size (logical pixels)
+      canvas.style.width = `${containerWidth}px`;
+      canvas.style.height = `${height}px`;
+      
+      // Set actual canvas size (physical pixels)
+      canvas.width = containerWidth * dpr;
+      canvas.height = height * dpr;
+      
+      // Scale context to match device pixel ratio
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
+      }
 
       // Update state so React overlays match
       setActualColumnCount(columnCount);
 
-      // Draw layers
-      drawTemperatureBars(canvas, forecast.slice(0, columnCount), columnWidth, getTemperatureColor);
-      drawPrecipitation(canvas, forecast.slice(0, columnCount), columnWidth);
+      // Draw layers (pass logical dimensions)
+      drawTemperatureBars(canvas, forecast.slice(0, columnCount), columnWidth, height, getTemperatureColor);
+      drawPrecipitation(canvas, forecast.slice(0, columnCount), columnWidth, height);
     };
 
     updateCanvas();

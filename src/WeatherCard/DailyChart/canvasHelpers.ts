@@ -60,15 +60,14 @@ export function drawTemperatureBars(
   canvas: HTMLCanvasElement,
   forecast: WeatherForecast[],
   columnWidth: number,
+  logicalHeight: number,
   colorFn: (temp: number) => string
 ): void {
   const ctx = canvas.getContext('2d');
   if (!ctx || !forecast || forecast.length === 0) return;
-
-  const height = canvas.height;
   
   // Create positioner for consistent bar positioning
-  const positioner = createBarPositioner(forecast, height);
+  const positioner = createBarPositioner(forecast, logicalHeight);
   
   // Calculate bar width (70% of column width)
   const barWidth = columnWidth * 0.7;

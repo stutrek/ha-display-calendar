@@ -117,6 +117,34 @@ function drawEmoji(
   ctx.restore();
 }
 
+/**
+ * Transform points to be denser near the top of the bounds
+ * Uses a power function to compress Y coordinates toward the top
+ * 
+ * @param points - Array of points to transform
+ * @param bounds - Bounding box for the transformation
+ * @param exponent - Power function exponent (default: 2.5, higher = more compression)
+ * @returns Transformed points with compressed Y coordinates
+ */
+function transformPointsDenserAtTop(
+  points: Array<{ x: number; y: number }>,
+  bounds: Bounds,
+  exponent: number = 2.5
+): Array<{ x: number; y: number }> {
+  return points.map(point => {
+    // Normalize y to 0-1 range relative to bounds
+    const normalizedY = (point.y - bounds.y) / bounds.height;
+    // Apply power function to compress toward top
+    // Higher exponent = more compression at top
+    const compressedY = Math.pow(normalizedY, exponent);
+    // Scale back to actual coordinates
+    return {
+      x: point.x,
+      y: bounds.y + compressedY * bounds.height,
+    };
+  });
+}
+
 // ============================================================================
 // Main Drawing Functions
 // ============================================================================
@@ -349,7 +377,7 @@ export function drawStars(
   const segmentWidth = width / forecast.length;
   
   // Only draw stars in the top 25% of the canvas
-  const visibleHeight = height * 0.25;
+  const visibleHeight = height;
   
   // Process each hour independently
   forecast.forEach((hour, index) => {
@@ -373,22 +401,24 @@ export function drawStars(
     
     // Base star count scales with clearness and segment size
     const segmentArea = segmentWidth * visibleHeight;
-    const baseStarDensity = 0.002; // stars per square pixel
+    const baseStarDensity = 0.03; // stars per square pixel
     const starCount = Math.max(1, Math.round(segmentArea * baseStarDensity * clearness));
     
     if (starCount === 0) return;
-    
     // Generate evenly-distributed points using voronoi relaxation
-    const iterations = Math.min(3, Math.max(1, Math.ceil(starCount / 5)));
+    const iterations = Math.min(1, Math.max(1, Math.ceil(starCount / 10)));
     const points = generateRelaxedPoints(starCount, segmentBounds, iterations, rng);
+    
+    // Transform points to be denser near the top
+    const transformedPoints = transformPointsDenserAtTop(points, segmentBounds);
     
     // Draw stars as white dots of varying sizes
     ctx.save();
     ctx.fillStyle = 'white';
     
-    points.forEach(point => {
+    transformedPoints.forEach(point => {
       // Deterministic size between 1-3px radius
-      const radius = 0.5 + rng() * 1.5;
+      const radius = 0.25 + rng() / 2;
       
       // Deterministic brightness/opacity
       const opacity = 0.4 + rng() * 0.6;
@@ -421,8 +451,8 @@ export function drawClouds(
   const height = canvas.height / dpr;
   const segmentWidth = width / forecast.length;
   
-  // Only draw clouds in the top 25% of the canvas
-  const visibleHeight = height * 0.25;
+  // Only draw clouds in the top 50% of the canvas
+  const visibleHeight = height * 0.3;
   
   // Process each hour independently
   forecast.forEach((hour, index) => {
@@ -451,10 +481,15 @@ export function drawClouds(
     const cloudCount = Math.max(0, Math.round(segmentArea * cloudDensity * (cloudCoverage / 100)));
     
     if (cloudCount === 0) return;
+
+	console.log('cloudCount', cloudCount);
     
     // Generate evenly-distributed points using voronoi relaxation
-    const iterations = Math.min(3, Math.max(1, Math.ceil(cloudCount / 3)));
+    const iterations = Math.min(2, Math.max(1, Math.ceil(cloudCount / 4)));
     const points = generateRelaxedPoints(cloudCount, segmentBounds, iterations, rng);
+    
+    // Transform points to be denser near the top
+    // const transformedPoints = transformPointsDenserAtTop(points, segmentBounds, 1.5);
     
     // Draw cloud emoji at each point
     points.forEach(point => {
