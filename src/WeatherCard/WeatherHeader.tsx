@@ -44,19 +44,19 @@ function formatTime(date: Date): string {
 /**
  * Format weather condition string to be human-readable, excluding "night" from output
  */
-function formatCondition(condition: string | undefined): string {
-	if (!condition) return '';
+// function formatCondition(condition: string | undefined): string {
+// 	if (!condition) return '';
 
-	condition = condition.replace('partly', 'partly-');
+// 	condition = condition.replace('partly', 'partly-');
 
-	// Split on hyphens, filter out "night", capitalize each word, and join
-	const words = condition
-		.split('-')
-		.filter(word => word !== 'night')
-		.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+// 	// Split on hyphens, filter out "night", capitalize each word, and join
+// 	const words = condition
+// 		.split('-')
+// 		.filter(word => word !== 'night')
+// 		.map(word => word.charAt(0).toUpperCase() + word.slice(1));
 
-	return words.join(' ');
-}
+// 	return words.join(' ');
+// }
 
 /**
  * Get rotation style for wind arrow (pointing in direction wind is going TO)
@@ -92,7 +92,7 @@ export function WeatherHeader({ entity, windSpeedUnit }: WeatherHeaderProps) {
 	const icon = getWeatherIcon(condition);
 	const hasFeelsLike = attrs.apparent_temperature !== undefined;
 
-	const conditionText = formatCondition(condition);
+	// const conditionText = formatCondition(condition);
 
 	return (
 		<div class="weather-header">
