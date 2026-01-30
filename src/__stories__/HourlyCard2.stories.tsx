@@ -18,6 +18,16 @@ function createColorFnForSample(data: WeatherForecast[] | undefined) {
   return createAdaptiveTemperatureColorFn(min, max, 10);
 }
 
+// Helper to get sun times for a forecast (extracts date from first entry)
+function getSunTimesForForecast(forecast: WeatherForecast[] | undefined) {
+  if (!forecast || forecast.length === 0) {
+    return samples.defaultSunTimes;
+  }
+  const firstDate = new Date(forecast[0].datetime);
+  const dateString = firstDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
+  return samples.calculateSunTimes(dateString, 40);
+}
+
 // ============================================================================
 // Meta Configuration
 // ============================================================================
@@ -62,7 +72,7 @@ type HourlyChartStoryArgs = Parameters<typeof HourlyChart>[0];
 
 function HourlyChartWrapper(props: HourlyChartProps) {
   return (
-    <div style={{ width: '400px', padding: '1rem' }}>
+    <div style={{ width: '400px', padding: '1rem' }} onClick={() => console.log(props.forecast)}>
       <HourlyChart {...props} />
     </div>
   );
@@ -113,7 +123,7 @@ function PatternGrid({ pattern, patternName }: PatternGridProps) {
             <div style={{ width: '400px' }} onClick={() => console.log(data)}>
               <HourlyChart
                 forecast={data}
-                sunTimes={samples.defaultSunTimes}
+                sunTimes={getSunTimesForForecast(data)}
                 getTemperatureColor={createColorFnForSample(data)}
               />
             </div>
@@ -171,7 +181,7 @@ function AllPatternsGrid({ season }: AllPatternsGridProps) {
             <div style={{ width: '400px' }} onClick={() => console.log(forecast)}>
               <HourlyChart
                 forecast={forecast}
-                sunTimes={samples.defaultSunTimes}
+                sunTimes={getSunTimesForForecast(forecast)}
                 getTemperatureColor={createColorFnForSample(forecast)}
               />
             </div>
@@ -295,7 +305,7 @@ export const BuildingStormSummer: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.buildingStorm.summer,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.buildingStorm.summer),
     getTemperatureColor: createColorFnForSample(samples.buildingStorm.summer),
   },
 };
@@ -305,7 +315,7 @@ export const FogAndThunderstormSummer: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.fogAndThunderstorm.summer,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.fogAndThunderstorm.summer),
     getTemperatureColor: createColorFnForSample(samples.fogAndThunderstorm.summer),
   },
 };
@@ -315,7 +325,7 @@ export const RainyMorningFall: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.rainyMorning.earlyFall,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.rainyMorning.earlyFall),
     getTemperatureColor: createColorFnForSample(samples.rainyMorning.earlyFall),
   },
 };
@@ -325,7 +335,7 @@ export const DrizzleAndThunderstormsSummer: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.drizzleAndThunderstorms.summer,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.drizzleAndThunderstorms.summer),
     getTemperatureColor: createColorFnForSample(samples.drizzleAndThunderstorms.summer),
   },
 };
@@ -335,7 +345,7 @@ export const PerfectClearSummer: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.perfectClear.summer,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.perfectClear.summer),
     getTemperatureColor: createColorFnForSample(samples.perfectClear.summer),
   },
 };
@@ -345,7 +355,7 @@ export const WinterSnowWinter: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.winterSnow.winter,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.winterSnow.winter),
     getTemperatureColor: createColorFnForSample(samples.winterSnow.winter),
   },
 };
@@ -355,7 +365,7 @@ export const ColdFrontSpring: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.coldFront.lateSpring,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.coldFront.lateSpring),
     getTemperatureColor: createColorFnForSample(samples.coldFront.lateSpring),
   },
 };
@@ -365,7 +375,7 @@ export const MarineLayerSummer: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.marineLayer.summer,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.marineLayer.summer),
     getTemperatureColor: createColorFnForSample(samples.marineLayer.summer),
   },
 };
@@ -375,7 +385,7 @@ export const AllDayOvercastFall: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.allDayOvercast.lateFall,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.allDayOvercast.lateFall),
     getTemperatureColor: createColorFnForSample(samples.allDayOvercast.lateFall),
   },
 };
@@ -385,7 +395,7 @@ export const OvernightSnowClearingWinter: Story = {
   render: (args) => <HourlyChartWrapper {...(args as unknown as HourlyChartStoryArgs)} />,
   args: {
     forecast: samples.overnightSnowClearing.winter,
-    sunTimes: samples.defaultSunTimes,
+    sunTimes: getSunTimesForForecast(samples.overnightSnowClearing.winter),
     getTemperatureColor: createColorFnForSample(samples.overnightSnowClearing.winter),
   },
 };

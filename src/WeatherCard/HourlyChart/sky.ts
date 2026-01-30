@@ -15,10 +15,10 @@ import { createRng } from './random';
 // ============================================================================
 
 const COLORS = {
-  dayClear: '#5FB3F6',      // Bright sky blue
+  dayClear: '#44DAFF',      // Bright sky blue
   dayCloudy: '#8A97A8',     // Cool grey
   nightClear: '#2D1B4E',    // Deep violet
-  nightCloudy: '#1A1F2E',   // Dark charcoal
+  nightCloudy: '#2D1B4E',   // Dark charcoal
 };
 
 // Blur radius for temperature mask (in pixels)
@@ -199,7 +199,6 @@ export function drawSkyBackground(
     const color = getHourColor(hour.datetime, hour.cloud_coverage, sunTimes);
     colorStops.push({ position, color });
   });
-  
   // Add sunrise transition if within range
   if (sunTimes.sunrise) {
     let sunriseTime = sunTimes.sunrise.getTime();

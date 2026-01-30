@@ -499,15 +499,55 @@ export const allScenarios = {
 };
 
 // ============================================================================
-// Default Sun Times (for Storybook use)
+// Helper: Calculate Sun Times for a Given Date
 // ============================================================================
 
-export const defaultSunTimes: SunTimes = {
-  sunrise: new Date('2026-01-24T06:30:00'),
-  sunset: new Date('2026-01-24T17:30:00'),
-  dawn: new Date('2026-01-24T06:00:00'),
-  dusk: new Date('2026-01-24T18:00:00'),
-};
+/**
+ * Calculate approximate sunrise/sunset times for a given date and latitude.
+ * Uses a simplified solar calculation for mid-latitudes.
+ * @param dateString ISO date string (e.g., '2026-01-15')
+ * @param latitude Latitude in degrees (default: 40, approximate for mid-latitudes)
+ * @returns SunTimes object with sunrise, sunset, dawn, and dusk
+ */
+export function calculateSunTimes(dateString: string, latitude: number = 40): SunTimes {
+  const date = new Date(dateString + 'T12:00:00'); // Noon on the target date
+  const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+  
+  // Solar declination angle (simplified)
+  const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365) * Math.PI / 180);
+  
+  // Hour angle calculation
+  const latRad = latitude * Math.PI / 180;
+  const decRad = declination * Math.PI / 180;
+  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad)) * 180 / Math.PI;
+  
+  // Sunrise/sunset times (in hours from noon)
+  const sunriseOffset = -hourAngle / 15; // Convert to hours
+  const sunsetOffset = hourAngle / 15;
+  
+  // Calculate actual times
+  const sunrise = new Date(date);
+  sunrise.setHours(12 + sunriseOffset, Math.round((sunriseOffset % 1) * 60), 0, 0);
+  
+  const sunset = new Date(date);
+  sunset.setHours(12 + sunsetOffset, Math.round((sunsetOffset % 1) * 60), 0, 0);
+  
+  // Dawn is 30 minutes before sunrise, dusk is 30 minutes after sunset
+  const dawn = new Date(sunrise);
+  dawn.setMinutes(dawn.getMinutes() - 30);
+  
+  const dusk = new Date(sunset);
+  dusk.setMinutes(dusk.getMinutes() + 30);
+  
+  return { sunrise, sunset, dawn, dusk };
+}
+
+// ============================================================================
+// Default Sun Times (for Storybook use)
+// Uses January 15 to match winter weather data
+// ============================================================================
+
+export const defaultSunTimes: SunTimes = calculateSunTimes('2026-01-15', 40);
 
 // ============================================================================
 // Legacy Exports (for backward compatibility with existing stories)
