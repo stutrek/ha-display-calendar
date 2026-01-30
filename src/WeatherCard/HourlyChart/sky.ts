@@ -22,7 +22,7 @@ const COLORS = {
 };
 
 // Blur radius for temperature mask (in pixels)
-const MASK_BLUR_RADIUS = 20;
+const MASK_BLUR_RADIUS = 12;
 
 // ============================================================================
 // Helper Functions
