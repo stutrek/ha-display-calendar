@@ -2,15 +2,16 @@ import type { HomeAssistant } from './HAContext';
 
 /**
  * Base class for Home Assistant cards with entity subscription management.
- * Handles fine-grained entity subscriptions and notifies Preact components.
+ * 
+ * Uses the standard HA pattern: Home Assistant calls `set hass()` whenever any
+ * entity state changes. We compare old vs new states and notify Preact components
+ * that subscribed to specific entities via `_subscribeToEntity`.
  */
 export abstract class BaseHACard<TConfig> extends HTMLElement {
   protected _hass?: HomeAssistant;
   protected _config?: TConfig;
   protected _shadowRoot: ShadowRoot;
-  private _unsubscribe?: () => void;
   private _entityChangeListeners = new Map<string, Set<(entity: any) => void>>();
-  private _subscribeId = 0; // Guard against overlapping subscribe calls
 
   constructor() {
     super();
@@ -20,82 +21,42 @@ export abstract class BaseHACard<TConfig> extends HTMLElement {
   // Lifecycle methods
   connectedCallback() {
     console.log(`[${this.getCardName()}] Connected to DOM`);
-    this._subscribe();
+    if (this._hass && this._config) {
+      this._render();
+    }
   }
 
   disconnectedCallback() {
     console.log(`[${this.getCardName()}] Disconnected from DOM`);
-    this._unsubscribe?.();
     this._entityChangeListeners.clear();
   }
 
-  // Hass setter
+  // Hass setter - called by Home Assistant whenever any entity state changes
   set hass(hass: HomeAssistant) {
-    const hadHass = !!this._hass;
+    const prevStates = this._hass?.states;
     this._hass = hass;
-    
-    if (!hadHass && this._config) {
-      this._subscribe();
+
+    // Find which of our entities changed and notify listeners
+    const changed: Record<string, any> = {};
+    for (const entityId of this._getEntityIds()) {
+      const newState = hass.states[entityId];
+      const oldState = prevStates?.[entityId];
+      if (newState !== oldState) {
+        changed[entityId] = newState;
+      }
     }
-    // Don't call _render() here - let subscriptions trigger it
+    this._notifyEntityChanges(changed);
+
+    // Initial render when we first get hass + config
+    if (!prevStates && this._config) {
+      this._render();
+    }
   }
 
-  // Subscription management
-  protected async _subscribe() {
-    if (!this._hass || !this._config) return;
-
-    // Increment ID to invalidate any in-flight subscribe calls
-    const subscribeId = ++this._subscribeId;
-
-    // Unsubscribe from previous subscription
-    this._unsubscribe?.();
-    this._unsubscribe = undefined;
-
-    const entityIds = this._getEntityIds();
-
-    if (entityIds.length === 0) {
-      console.log(`[${this.getCardName()}] No entities to subscribe to`);
+  // Called by child classes when config changes - just triggers a re-render
+  protected _subscribe() {
+    if (this._hass && this._config) {
       this._render();
-      return;
-    }
-
-    console.log(`[${this.getCardName()}] Subscribing to:`, entityIds);
-
-    try {
-      const unsubscribe = await this._hass.connection.subscribeMessage<{
-        entity_id: string;
-        new_state: any;
-        old_state: any;
-      }>(
-        (msg) => {
-          console.log(`[${this.getCardName()}] State changed:`, msg.entity_id);
-          
-          if (this._hass && msg.new_state) {
-            this._hass.states[msg.entity_id] = msg.new_state;
-          }
-          
-          this._notifyEntityChanges({ [msg.entity_id]: msg.new_state });
-        },
-        {
-          type: 'subscribe_entities',
-          entity_ids: entityIds,
-        }
-      );
-
-      // Only use this subscription if it's still the latest
-      if (subscribeId === this._subscribeId) {
-        this._unsubscribe = unsubscribe;
-        this._render();
-      } else {
-        // Stale subscription, clean it up
-        unsubscribe();
-      }
-    } catch (err) {
-      // Only handle error if this is still the latest subscribe call
-      if (subscribeId === this._subscribeId) {
-        console.error(`[${this.getCardName()}] Subscription failed:`, err);
-        this._render();
-      }
     }
   }
 
