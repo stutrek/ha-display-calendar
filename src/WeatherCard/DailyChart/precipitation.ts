@@ -4,8 +4,7 @@
 // ============================================================================
 
 import type { WeatherForecast } from '../WeatherContext';
-import type { Bounds } from '../HourlyChart/voronoiRelaxation';
-import { generateRelaxedPoints } from '../HourlyChart/voronoiRelaxation';
+import { generatePoints, type Bounds } from '../HourlyChart/generatePoints';
 import { createRng } from '../HourlyChart/random';
 
 // ============================================================================
@@ -123,10 +122,10 @@ export function drawPrecipitation(
     
     if (particleCount === 0) return;
     
-    // Use Voronoi relaxation for natural distribution
-    // Adjust iterations based on particle count
-    const iterations = Math.min(5, Math.max(1, Math.ceil(particleCount / 3)));
-    const points = generateRelaxedPoints(particleCount, columnBounds, iterations, rng);
+    // Generate evenly-distributed points using Poisson disk sampling
+    const areaPerParticle = columnArea / particleCount;
+    const minDistance = Math.sqrt(areaPerParticle) * 0.9;
+    const points = generatePoints(particleCount, columnBounds, minDistance, 30, rng);
     
     // Determine emoji for each particle (deterministic for mixed precipitation)
     const getEmoji = (): string => {

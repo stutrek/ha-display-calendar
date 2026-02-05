@@ -4,12 +4,10 @@
 // ============================================================================
 
 import type { WeatherForecast, SunTimes } from '../WeatherContext';
-import type { Bounds } from './voronoiRelaxation';
-import { generateRelaxedPoints } from './voronoiRelaxation';
+import { generatePoints, type Bounds } from './generatePoints';
 import { createTemperaturePositioner } from './canvasHelpers';
 import { supportsNativeBlur, blurCanvasInPlace } from './blur';
 import { createRng } from './random';
-
 // ============================================================================
 // Constants
 // ============================================================================
@@ -404,12 +402,12 @@ export function drawStars(
     const starCount = Math.max(1, Math.round(segmentArea * baseStarDensity * clearness));
     
     if (starCount === 0) return;
-    // Generate evenly-distributed points using voronoi relaxation
-    const iterations = Math.min(1, Math.max(1, Math.ceil(starCount / 10)));
-    const points = generateRelaxedPoints(starCount, segmentBounds, iterations, rng);
+    
+    // Generate points using jittered grid sampling
+    const points = generatePoints(starCount, segmentBounds, undefined, 30, rng);
     
     // Transform points to be denser near the top
-    const transformedPoints = transformPointsDenserAtTop(points, segmentBounds);
+    const transformedPoints = transformPointsDenserAtTop(points, segmentBounds, 4);
     
     // Draw stars as white dots of varying sizes
     ctx.save();
@@ -451,7 +449,7 @@ export function drawClouds(
   const segmentWidth = width / forecast.length;
   
   // Only draw clouds in the top 50% of the canvas
-  const visibleHeight = height * 0.3;
+  const visibleHeight = height * 0.5;
   
   // Process each hour independently
   forecast.forEach((hour, index) => {
@@ -480,20 +478,19 @@ export function drawClouds(
     const cloudCount = Math.max(0, Math.round(segmentArea * cloudDensity * (cloudCoverage / 100)));
     
     if (cloudCount === 0) return;
-
-	console.log('cloudCount', cloudCount);
     
-    // Generate evenly-distributed points using voronoi relaxation
-    const iterations = Math.min(2, Math.max(1, Math.ceil(cloudCount / 4)));
-    const points = generateRelaxedPoints(cloudCount, segmentBounds, iterations, rng);
+    // Generate evenly-distributed points using Poisson disk sampling
+    const areaPerCloud = segmentArea / cloudCount;
+    const minDistance = Math.sqrt(areaPerCloud) * 0.8;
+    const points = generatePoints(cloudCount, segmentBounds, minDistance, 30, rng);
     
     // Transform points to be denser near the top
-    // const transformedPoints = transformPointsDenserAtTop(points, segmentBounds, 1.5);
+    const transformedPoints = transformPointsDenserAtTop(points, segmentBounds, 1.5);
     
     // Draw cloud emoji at each point
-    points.forEach(point => {
+    transformedPoints.forEach(point => {
       // Deterministic cloud size
-      const size = 10 + rng() * 4;
+      const size = 15 + rng() * 5;
       drawEmoji(ctx, '☁️', point.x, point.y, size);
     });
   });

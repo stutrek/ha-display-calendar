@@ -4,15 +4,8 @@
 // ============================================================================
 
 import type { WeatherForecast } from '../WeatherContext';
-import type { Bounds } from './voronoiRelaxation';
-import { generatePoissonPoints } from './poissonDiskSampling';
-import { generateRelaxedPoints } from './voronoiRelaxation';
+import { generatePoints, type Bounds } from './generatePoints';
 import { createRng } from './random';
-
-// Algorithm selection
-type DistributionAlgorithm = 'voronoi' | 'poisson';
-const ALGORITHM: DistributionAlgorithm = 'voronoi'; // Change to 'poisson' to compare
-
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -130,22 +123,11 @@ export function drawPrecipitation(
     
     if (particleCount === 0) return;
     
-    // Generate evenly-distributed points using selected algorithm
-    let points;
-    
-    if (ALGORITHM === 'voronoi') {
-      // Voronoi relaxation (Lloyd's algorithm) - more uniform aesthetic
-      // Adjust iterations based on particle count: fewer particles need less relaxation
-      const iterations = Math.min(5, Math.max(1, Math.ceil(particleCount / 3)));
-      points = generateRelaxedPoints(particleCount, segmentBounds, iterations, rng);
-    } else {
-      // Poisson disk sampling - guaranteed minimum distance
-      // Calculate minimum distance based on particle density
-      const areaPerParticle = segmentArea / particleCount;
-      const calculatedDistance = Math.sqrt(areaPerParticle) * 0.9;
-      const minDistance = Math.max(8, Math.min(20, calculatedDistance));
-      points = generatePoissonPoints(particleCount, segmentBounds, minDistance, 30, rng);
-    }
+    // Generate evenly-distributed points using Poisson disk sampling
+    const areaPerParticle = segmentArea / particleCount;
+    const calculatedDistance = Math.sqrt(areaPerParticle) * 0.9;
+    const minDistance = Math.max(8, Math.min(20, calculatedDistance));
+    const points = generatePoints(particleCount, segmentBounds, minDistance, 30, rng);
     
     // Determine emoji for each particle (deterministic for mixed precipitation)
     const getEmoji = (): string => {
